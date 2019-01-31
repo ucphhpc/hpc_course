@@ -6,7 +6,6 @@
 #include <random>
 #include <H5Cpp.h>
 #include <chrono>
-
 #include <argparse.hpp>
 
 const double G = 6.673e-11;
@@ -112,7 +111,12 @@ SolarSystem random_system(double position_limit, uint64_t num_of_planets, uint64
     return SolarSystem{sun_and_planets, asteroids};
 }
 
-
+/** Update the velocity of `a` based on `b`
+ *
+ * @param a  The body to update
+ * @param b  The body which act on `a`
+ * @param dt The time step size
+ */
 void update_velocity(Body &a, const Body &b, double dt) {
     // Euclidean distance
     double r = std::sqrt(squared(b.pos_x - a.pos_x) + squared(b.pos_y - a.pos_y) +
@@ -127,6 +131,11 @@ void update_velocity(Body &a, const Body &b, double dt) {
     a.vel_z += F * ((b.pos_z - a.pos_z) / r) / a.mass * dt;
 }
 
+/** Integrate one time step of the solar system
+ *
+ * @param solar_system  The solar system to update
+ * @param dt            The time step size
+ */
 void integrate(SolarSystem &solar_system, double dt) {
 
     // Update velocity of the sub and planets
@@ -160,6 +169,13 @@ void integrate(SolarSystem &solar_system, double dt) {
     }
 }
 
+/** Write data to a hdf5 file
+ *
+ * @param group  The hdf5 group to write in
+ * @param name   The name of the data
+ * @param shape  The shape of the data
+ * @param data   The data
+ */
 void write_hdf5(H5::Group &group, const std::string &name, const std::vector<hsize_t> &shape,
                 const std::vector<double> &data) {
 
@@ -168,6 +184,11 @@ void write_hdf5(H5::Group &group, const std::string &name, const std::vector<hsi
     dataset.write(&data[0], H5::PredType::NATIVE_DOUBLE);
 }
 
+/** Write the solar system to a hdf5 file (use `visual.py` to visualize the hdf5 data)
+ *
+ * @param solar_systems  The solar system to write
+ * @param filename       The filename to write to
+ */
 void write_hdf5(const std::vector<SolarSystem> &solar_systems, const std::string &filename) {
 
     H5::H5File file(filename, H5F_ACC_TRUNC);
@@ -211,6 +232,14 @@ void write_hdf5(const std::vector<SolarSystem> &solar_systems, const std::string
     }
 }
 
+/** N-body NICE simulation
+ *
+ * @param num_of_iterations  Number of iterations
+ * @param num_of_planets     Number of planets
+ * @param num_of_asteroids   Number of asteroids
+ * @param seed               Random seed
+ * @param filename           Filename to write each time step to. If empty, do data is written.
+ */
 void simulate(uint64_t num_of_iterations, uint64_t num_of_planets, uint64_t num_of_asteroids, uint64_t seed,
               const std::string &filename) {
     double dt = 1e12;
@@ -232,6 +261,7 @@ void simulate(uint64_t num_of_iterations, uint64_t num_of_planets, uint64_t num_
     std::cout << "elapsed time: " << (end - begin).count() / 1000000000.0 << " sec"<< std::endl;
 }
 
+/** Main function that parses the command line and start the simulation */
 int main(int argc, char **argv) {
     util::ArgParser args(argc, argv);
     int64_t iterations, num_of_planets, num_of_asteroids, seed;
