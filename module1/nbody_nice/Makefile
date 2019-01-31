@@ -1,12 +1,16 @@
 LIB ?= -lm -lbhxx -lboost_serialization -lboost_filesystem -lboost_system -lboost_regex
 INC ?= -I/opt/hpc_course/include
-FLAGS ?= -O3 -DNDEBUG -g
+FLAGS ?= -O3 -DNDEBUG -g -Wall
 
-.PHONY: clean
+.PHONY: clean all
 
+all: nbody_sequential nbody_bhxx
 
-nbody_seq: nbody_sequential.cpp
+nbody_sequential: nbody_sequential.cpp
 	h5c++ $(FLAGS) $(LIB) $(INC) -o nbody_sequential nbody_sequential.cpp
 
+nbody_bhxx: nbody_bhxx.cpp
+	h5c++ $(FLAGS) $(LIB) $(INC) -o nbody_bhxx nbody_bhxx.cpp
+
 clean:
-	rm -f nbody_sequential *.o
+	rm -f nbody_sequential nbody_bhxx *.o

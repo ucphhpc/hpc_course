@@ -248,7 +248,7 @@ void simulate(uint64_t num_of_iterations, uint64_t num_of_planets, uint64_t num_
     std::vector<SolarSystem> systems;
     systems.push_back(system);
     auto begin = std::chrono::steady_clock::now();
-    for (int i = 0; i < num_of_iterations; ++i) {
+    for (uint64_t i = 0; i < num_of_iterations; ++i) {
         integrate(system, dt);
         if (!filename.empty()) {
             systems.push_back(system);
