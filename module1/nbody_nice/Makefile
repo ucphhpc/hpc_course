@@ -1,5 +1,5 @@
 LIB ?= -lm -lbhxx -lboost_serialization -lboost_filesystem -lboost_system -lboost_regex
-INC ?= -I/opt/hpc_course/include
+INC ?= -I/opt/hpc_course/include -I/usr/local/include/bohrium
 FLAGS ?= -O3 -DNDEBUG -g -Wall
 
 .PHONY: clean all
