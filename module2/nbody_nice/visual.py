@@ -22,8 +22,15 @@ def gfx_init(xm, ym, zm):
     return sub
 
 
-def show(sub, sun_and_planets_position, asteroids_position):
+def show(sub, frame_id, hdf5_file):
     """Show plot"""
+
+    sun_and_planets_position = '/%d/sun_and_planets_position' % frame_id
+    asteroids_position = '/%d/asteroids_position' % frame_id
+
+    sun_and_planets_position = hdf5_file[str(frame_id)][sun_and_planets_position]
+    asteroids_position = hdf5_file[asteroids_position]
+
     # Sun
     sub.clear()
     sub.scatter(
@@ -47,8 +54,7 @@ def show(sub, sun_and_planets_position, asteroids_position):
         asteroids_position[0][1:],
         asteroids_position[1][1:],
         asteroids_position[2][1:],
-        #s=.1,
-        s=5,
+        s=.1,
         marker='.',
         c='green')
 
@@ -59,9 +65,6 @@ def show(sub, sun_and_planets_position, asteroids_position):
     except AttributeError:
         print('Warning: correct 3D plots may require matplotlib-1.1 or later')
 
-    plt.draw()
-    plt.pause(0.01)
-
 
 def main(hdf5_filename):
     P3 = gfx_init(1e18, 1e18, 1e18)
@@ -69,10 +72,9 @@ def main(hdf5_filename):
     with h5py.File(hdf5_filename, 'r') as f:
         frames = sorted([int(k) for k in f.keys()])
         for i in frames:
-            sun_and_planets_position = '/%d/sun_and_planets_position' % i
-            asteroids_position = '/%d/asteroids_position' % i
-            show(P3, f[str(i)][sun_and_planets_position], f[asteroids_position])
-    plt.pause(10)
+            show(P3, i, f)
+            plt.draw()
+            plt.pause(0.01)
 
 
 if __name__ == '__main__':
