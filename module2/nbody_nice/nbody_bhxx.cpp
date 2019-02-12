@@ -73,7 +73,7 @@ SolarSystem random_system(double position_limit, uint64_t num_of_planets, uint64
 
 /** Fill the diagonal of `ary` with the value `val` */
 void fill_diagonal(bhxx::BhArray<double> &ary, double val) {
-    if (ary.shape().size() != 2 || ary.shape()[0] == ary.shape()[1]) {
+    if (ary.shape().size() != 2 || ary.shape()[0] != ary.shape()[1]) {
         throw std::runtime_error("The array must be a squired matrix");
     }
     if (!ary.isContiguous()) {
