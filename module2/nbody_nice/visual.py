@@ -4,9 +4,8 @@
 # Tell pylint that Axes3D import is required although never explicitly used
 from mpl_toolkits.mplot3d import Axes3D  # pylint: disable=W0611
 import matplotlib.pyplot as plt
-import matplotlib
+from matplotlib import animation
 import h5py
-import numpy as np
 import argparse
 
 
@@ -19,10 +18,10 @@ def gfx_init(xm, ym, zm):
     sub.xm = xm
     sub.ym = ym
     sub.zm = zm
-    return sub
+    return (fig, sub)
 
 
-def show(sub, frame_id, hdf5_file):
+def show(frame_id, hdf5_file, sub):
     """Show plot"""
 
     sun_and_planets_position = '/%d/sun_and_planets_position' % frame_id
@@ -66,15 +65,17 @@ def show(sub, frame_id, hdf5_file):
         print('Warning: correct 3D plots may require matplotlib-1.1 or later')
 
 
-def main(hdf5_filename):
-    P3 = gfx_init(1e18, 1e18, 1e18)
+def main(args):
+    (fig, sub) = gfx_init(1e18, 1e18, 1e18)
 
-    with h5py.File(hdf5_filename, 'r') as f:
+    with h5py.File(args.input_hdf5_file, 'r') as f:
         frames = sorted([int(k) for k in f.keys()])
-        for i in frames:
-            show(P3, i, f)
-            plt.draw()
-            plt.pause(0.01)
+        ani = animation.FuncAnimation(fig, show, frames, fargs=(f, sub), interval=1000 / args.fps)
+        if args.format == "gif":
+            ani.save(args.output_video_file, writer='imagemagick', fps=args.fps)
+        else:
+            assert (args.format == "mp4")
+            ani.save(args.output_video_file, writer='ffmpeg', fps=args.fps)
 
 
 if __name__ == '__main__':
@@ -84,5 +85,23 @@ if __name__ == '__main__':
         type=str,
         help='Path to the hdf5 file to visualize.'
     )
+    parser.add_argument(
+        'output_video_file',
+        type=str,
+        help='Path to the written video file.'
+    )
+    parser.add_argument(
+        '--fps',
+        type=int,
+        default=10,
+        help='Frames per second.'
+    )
+    parser.add_argument(
+        '--format',
+        choices=["gif", "mp4"],
+        type=str,
+        default="gif",
+        help='Frames per second.'
+    )
     args = parser.parse_args()
-    main(args.input_hdf5_file)
+    main(args)
