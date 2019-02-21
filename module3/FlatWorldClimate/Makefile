@@ -1,6 +1,7 @@
 LIB ?= -lm -fopenmp
 INC ?= -I../../include
 FLAGS ?= -O3 -DNDEBUG -g -Wall
+#FLAGS ?= -O0 -g -Wall
 
 .PHONY: clean all
 
