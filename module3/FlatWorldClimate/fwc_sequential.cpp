@@ -3,6 +3,7 @@
 #include <H5Cpp.h>
 #include <chrono>
 #include <cmath>
+#include <numeric>
 #include <argparse.hpp>
 
 /** Representation of a flat world */
@@ -173,6 +174,10 @@ void simulate(uint64_t num_of_iterations, const std::string &model_filename, con
         integrate(world, t / t_div);
         if (!output_filename.empty()) {
             world_history.push_back(world);
+            std::cout << t << " -- max: " << *std::max_element(world.data.begin(), world.data.end())
+                      << ", min: " << *std::min_element(world.data.begin(), world.data.end())
+                      << ", avg: " << std::accumulate(world.data.begin(), world.data.end(), 0.0) / world.data.size()
+                      << "\n";
         }
     }
     if (!output_filename.empty()) {
