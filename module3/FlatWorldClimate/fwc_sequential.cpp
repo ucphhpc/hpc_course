@@ -51,8 +51,8 @@ void radiation(World &world, double world_time) {
     for (uint64_t i = 0; i < world.latitude; ++i) {
         for (uint64_t j = 0; j < world.longitude; ++j) {
             // Euclidean distance between the sun and each earth coordinate
-            double distance = sqrt(
-                    (sun_lat - i) * (sun_lat - i) + (sun_long - j) * (sun_long - j) + sun_height_squared);
+            double distance = \
+                    sqrt((sun_lat - i) * (sun_lat - i) + (sun_long - j) * (sun_long - j) + sun_height_squared);
             world.data[i * world.longitude + j] += \
                     (sun_intensity / distance) * (1. - world.albedo_data[i * world.longitude + j]);
         }
