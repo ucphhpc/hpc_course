@@ -1,5 +1,5 @@
-LIB ?= -L/home/madsbk/.local/lib/ -lm -lbhxx -lboost_serialization -lboost_filesystem -lboost_system -lboost_regex
-INC ?= -I../../include -I/home/madsbk/.local/include/
+LIB ?= -lm -lbhxx -lboost_serialization -lboost_filesystem -lboost_system -lboost_regex
+INC ?= -I../../include
 FLAGS ?= -O3 -DNDEBUG -g -Wall
 
 .PHONY: clean all
