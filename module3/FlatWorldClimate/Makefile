@@ -1,14 +1,16 @@
 LIB ?= -lm -fopenmp
 INC ?= -I../../include
 FLAGS ?= -O3 -DNDEBUG -g -Wall
-#FLAGS ?= -O0 -g -Wall
 
 .PHONY: clean all
 
-all: fwc_sequential
+all: fwc_sequential fwc_parallel
 
 fwc_sequential: fwc_sequential.cpp
 	h5c++ $(FLAGS) $(LIB) $(INC) -o fwc_sequential fwc_sequential.cpp
 
+fwc_parallel: fwc_parallel.cpp
+	h5c++ $(FLAGS) $(LIB) $(INC) -o fwc_parallel fwc_parallel.cpp
+
 clean:
-	rm -f fwc_sequential *.o
+	rm -f fwc_sequential fwc_parallel *.o
