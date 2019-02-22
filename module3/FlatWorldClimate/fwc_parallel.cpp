@@ -206,7 +206,8 @@ int main(int argc, char **argv) {
     if (args.cmdOptionExists("--model")) {
         model_filename = args.getCmdOption("--model");
     } else {
-        throw std::invalid_argument("You must specify the model to simulate (e.g. --model small_model.hdf5)");
+        throw std::invalid_argument("You must specify the model to simulate "
+                                    "(e.g. --model world_models/small_model.hdf5)");
     }
     const std::string &output_filename = args.getCmdOption("--out");
     simulate(static_cast<uint64_t>(iterations), model_filename, output_filename);
