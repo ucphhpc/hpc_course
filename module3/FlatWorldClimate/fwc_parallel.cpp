@@ -5,6 +5,7 @@
 #include <cmath>
 #include <numeric>
 #include <argparse.hpp>
+#include <omp.h>
 
 /** Representation of a flat world */
 class World {
@@ -186,7 +187,9 @@ void simulate(uint64_t num_of_iterations, const std::string &model_filename, con
         write_hdf5(world_history, output_filename);
     }
     auto end = std::chrono::steady_clock::now();
-    std::cout << "checksum: " << checksum << std::endl;
+    if (!output_filename.empty()) {
+        std::cout << "checksum: " << checksum << std::endl;
+    }
     std::cout << "elapsed time: " << (end - begin).count() / 1000000000.0 << " sec" << std::endl;
 }
 
