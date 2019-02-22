@@ -169,7 +169,7 @@ void simulate(uint64_t num_of_iterations, const std::string &model_filename, con
 
     const double t_div = world.longitude / 36.0;
     std::vector <World> world_history;
-    uint64_t check_sum = 0;
+    uint64_t checksum = 0;
     auto begin = std::chrono::steady_clock::now();
     for (uint64_t t = 0; t < num_of_iterations; ++t) {
         integrate(world, t / t_div);
@@ -179,14 +179,14 @@ void simulate(uint64_t num_of_iterations, const std::string &model_filename, con
                       << ", max: " << *std::max_element(world.data.begin(), world.data.end())
                       << ", avg: " << std::accumulate(world.data.begin(), world.data.end(), 0.0) / world.data.size()
                       << "\n";
-            check_sum += std::accumulate(world.data.begin(), world.data.end(), 0.0);
+            checksum += std::accumulate(world.data.begin(), world.data.end(), 0.0);
         }
     }
     if (!output_filename.empty()) {
         write_hdf5(world_history, output_filename);
     }
     auto end = std::chrono::steady_clock::now();
-    std::cout << "check sum: " << check_sum << std::endl;
+    std::cout << "checksum: " << checksum << std::endl;
     std::cout << "elapsed time: " << (end - begin).count() / 1000000000.0 << " sec" << std::endl;
 }
 
@@ -206,7 +206,8 @@ int main(int argc, char **argv) {
     if (args.cmdOptionExists("--model")) {
         model_filename = args.getCmdOption("--model");
     } else {
-        throw std::invalid_argument("You must specify the model to simulate (e.g. --model small_model.hdf5)");
+        throw std::invalid_argument("You must specify the model to simulate "
+                                    "(e.g. --model world_models/small_model.hdf5)");
     }
     const std::string &output_filename = args.getCmdOption("--out");
     simulate(static_cast<uint64_t>(iterations), model_filename, output_filename);
