@@ -51,10 +51,9 @@ void radiation(World &world, double world_time) {
     for (uint64_t i = 0; i < world.latitude; ++i) {
         for (uint64_t j = 0; j < world.longitude; ++j) {
             // Euclidean distance between the sun and each earth coordinate
-            double distance = \
-                    sqrt((sun_lat - i) * (sun_lat - i) + (sun_long - j) * (sun_long - j) + sun_height_squared);
+            double dist = sqrt((sun_lat - i) * (sun_lat - i) + (sun_long - j) * (sun_long - j) + sun_height_squared);
             world.data[i * world.longitude + j] += \
-                    (sun_intensity / distance) * (1. - world.albedo_data[i * world.longitude + j]);
+                                          (sun_intensity / dist) * (1. - world.albedo_data[i * world.longitude + j]);
         }
     }
 }
@@ -74,6 +73,7 @@ void energy_emmision(World &world) {
  * @param world  The world to update.
  */
 void diffuse(World &world) {
+    std::vector<double> tmp = world.data;
     for (uint64_t k = 0; k < 10; ++k) {
         for (uint64_t i = 1; i < world.latitude - 1; ++i) {
             for (uint64_t j = 1; j < world.longitude - 1; ++j) {
@@ -83,9 +83,10 @@ void diffuse(World &world) {
                 double right = world.data[(i + 1) * world.longitude + j];
                 double up = world.data[i * world.longitude + (j - 1)];
                 double down = world.data[i * world.longitude + (j + 1)];
-                world.data[i * world.longitude + j] = (center + left + right + up + down) / 5.;
+                tmp[i * world.longitude + j] = (center + left + right + up + down) / 5.;
             }
         }
+        std::swap(world.data, tmp);
     }
 }
 
@@ -122,7 +123,7 @@ World read_world_model(const std::string &filename) {
     dataspace.getSimpleExtentDims(dims, NULL);
     std::vector<double> data_out(dims[0] * dims[1]);
     dataset.read(data_out.data(), H5::PredType::NATIVE_DOUBLE, dataspace, dataspace);
-    std::cout << "Reading world model -- latitude: " << (unsigned long) (dims[0]) << ", longitude: "
+    std::cout << "World model loaded -- latitude: " << (unsigned long) (dims[0]) << ", longitude: "
               << (unsigned long) (dims[1]) << std::endl;
     return World(static_cast<uint64_t>(dims[0]), static_cast<uint64_t>(dims[1]), 293.15, std::move(data_out));
 }
@@ -168,22 +169,24 @@ void simulate(uint64_t num_of_iterations, const std::string &model_filename, con
 
     const double t_div = world.longitude / 36.0;
     std::vector <World> world_history;
-
+    uint64_t check_sum = 0;
     auto begin = std::chrono::steady_clock::now();
     for (uint64_t t = 0; t < num_of_iterations; ++t) {
         integrate(world, t / t_div);
         if (!output_filename.empty()) {
             world_history.push_back(world);
-            std::cout << t << " -- max: " << *std::max_element(world.data.begin(), world.data.end())
-                      << ", min: " << *std::min_element(world.data.begin(), world.data.end())
+            std::cout << t << " -- min: " << *std::min_element(world.data.begin(), world.data.end())
+                      << ", max: " << *std::max_element(world.data.begin(), world.data.end())
                       << ", avg: " << std::accumulate(world.data.begin(), world.data.end(), 0.0) / world.data.size()
                       << "\n";
+            check_sum += std::accumulate(world.data.begin(), world.data.end(), 0.0);
         }
     }
     if (!output_filename.empty()) {
         write_hdf5(world_history, output_filename);
     }
     auto end = std::chrono::steady_clock::now();
+    std::cout << "check sum: " << check_sum << std::endl;
     std::cout << "elapsed time: " << (end - begin).count() / 1000000000.0 << " sec" << std::endl;
 }
 
