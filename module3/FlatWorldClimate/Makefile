@@ -1,5 +1,5 @@
 LIB ?= -lm -fopenmp
-INC ?= -I../../include
+INC ?= -I../../include -I/opt/hpc_course/include
 FLAGS ?= -O3 -DNDEBUG -g -Wall
 
 .PHONY: clean all
