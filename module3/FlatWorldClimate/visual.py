@@ -28,13 +28,6 @@ class AnimatedGif:
         ani.save(filename, writer='imagemagick', fps=fps)
 
 
-def show(frame_id, hdf5_file, image):
-    world = hdf5_file[str(frame_id)]['/%d/world' % frame_id]
-    world = np.array(world)
-    print (frame_id, world.min(), world.max(), world.mean())
-    image.set_array(world)
-
-
 def main(args):
     with h5py.File(args.input_hdf5_file, 'r') as f:
         video = AnimatedGif()

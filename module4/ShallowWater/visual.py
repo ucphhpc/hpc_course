@@ -8,32 +8,37 @@ import argparse
 import numpy as np
 
 
-def plot_surface_video(time_steps, x, y, filename, fps, figsize=(100, 100)):
-    fig = plt.figure(figsize=figsize)
-    ax = fig.gca(projection='3d')
-    ax.plot_surface(x, y, time_steps[0])
+class AnimatedGif:
+    def __init__(self, size=(800, 800)):
+        self.fig = plt.figure()
+        self.fig.set_size_inches(size[0] / 100, size[1] / 100)
+        self.ax = self.fig.gca(projection='3d')
+        self.zlim = None
+        self.images = []
 
-    def animate(time_step):
-        print('hej')
-        ax.clear()
-        ax.set_zlim((0, time_steps[0].max() * 2))
-        line = ax.plot_surface(x, y, time_step)
-        return (line,)
+    def add(self, image):
+        if self.zlim is None:
+            self.ax.set_zlim((0, image.max() * 2))
+            self.zlim = (0, image.max() * 2)
+            self.ax.set_zlim(self.zlim)
+        x, y = np.meshgrid(np.arange(image.shape[0]), np.arange(image.shape[1]))
+        plt_im = self.ax.plot_surface(x, y, image, color='b')
+        self.images.append([plt_im])
 
-    ani = animation.FuncAnimation(fig, animate, time_steps, interval=50, blit=True)
-    print("hej")
-    ani.save(filename, writer='imagemagick', fps=fps)
+    def save(self, filename, fps):
+        ani = animation.ArtistAnimation(self.fig, self.images)
+        ani.save(filename, writer='imagemagick', fps=fps)
 
 
 def main(args):
     with h5py.File(args.input_hdf5_file, 'r') as f:
-        time_steps = []
+        video = AnimatedGif()
         for frame_id in sorted([int(k) for k in f.keys()]):
             frame = np.array(f[str(frame_id)]['/%d/water' % frame_id])
-            time_steps.append(frame)
-        shape = time_steps[0].shape
-        x, y = np.meshgrid(np.arange(shape[0]), np.arange(shape[1]))
-        plot_surface_video(time_steps, x, y, args.output_video_file, args.fps)
+            if frame_id % 10 == 0:
+                print(frame.shape)
+                video.add(frame)
+        video.save(args.output_video_file, args.fps)
 
 
 if __name__ == '__main__':
