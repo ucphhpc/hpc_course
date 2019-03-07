@@ -73,41 +73,40 @@ Water createWater(Shape shape) {
     return w;
 }
 
+void exchange_horizontal_ghost_lines(std::vector<double> &data, Shape shape) {
+    for (uint64_t i = 0; i < shape.cols; ++i) {
+        const uint64_t top_ghost = 0 * shape.cols + i;
+        const uint64_t bot_water = (shape.rows-2) * shape.cols + i;
+        const uint64_t bot_ghost = (shape.rows-1) * shape.cols + i;
+        const uint64_t top_water = 1 * shape.cols + i;
+        data[top_ghost] = data[bot_water];
+        data[bot_ghost] = data[top_water];
+    }
+}
+
+void exchange_vertical_ghost_lines(std::vector<double> &data, Shape shape) {
+    for (uint64_t i = 0; i < shape.cols; ++i) {
+        const uint64_t left_ghost = i * shape.cols + 0;
+        const uint64_t right_water = i * shape.cols + shape.cols-2;
+        const uint64_t right_ghost = i * shape.cols + shape.cols-1;
+        const uint64_t left_water = i * shape.cols + 1;
+        data[left_ghost] = data[right_water];
+        data[right_ghost] = data[left_water];
+    }
+}
 
 /** One integration step
  *
  * @param water      The water to update.
  */
 void integrate(Water &w) {
+    exchange_horizontal_ghost_lines(w.e, w.shape);
+    exchange_horizontal_ghost_lines(w.v, w.shape);
+
+    exchange_vertical_ghost_lines(w.e, w.shape);
+    exchange_vertical_ghost_lines(w.u, w.shape);
+
     const uint64_t stride = w.shape.cols;
-    for (uint64_t i = 1; i < w.shape.rows-1; ++i) {
-        const uint64_t left_ghost = i * stride + 0;
-        const uint64_t right_water = i * stride + w.shape.cols-2;
-        w.u[left_ghost] = w.u[right_water];
-        w.v[left_ghost] = w.v[right_water];
-        w.e[left_ghost] = w.e[right_water];
-
-        const uint64_t right_ghost = i * stride + w.shape.cols-1;
-        const uint64_t left_water = i * stride + 1;
-        w.u[right_ghost] = w.u[left_water];
-        w.v[right_ghost] = w.v[left_water];
-        w.e[right_ghost] = w.e[left_water];
-    }
-
-    for (uint64_t j = 1; j < w.shape.cols-1; ++j) {
-        const uint64_t top_ghost = 0 * stride + j;
-        const uint64_t bot_water = (w.shape.rows-2) * stride + j;
-        w.u[top_ghost] = w.u[bot_water];
-        w.v[top_ghost] = w.v[bot_water];
-        w.e[top_ghost] = w.e[bot_water];
-
-        const uint64_t bot_ghost = (w.shape.rows-1) * stride + j;
-        const uint64_t top_water = 1 * stride + j;
-        w.u[bot_ghost] = w.u[top_water];
-        w.v[bot_ghost] = w.v[top_water];
-        w.e[bot_ghost] = w.e[top_water];
-    }
-
     for (uint64_t i = 1; i < w.shape.rows-1; ++i) {
         for (uint64_t j = 1; j < w.shape.cols-1; ++j) {
             w.u[i * stride + j] = w.u[i * stride + j] - dt * g * (w.e[i * stride + j + 1] - w.e[i * stride + j]) / dx;
