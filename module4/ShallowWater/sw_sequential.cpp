@@ -85,7 +85,7 @@ void exchange_horizontal_ghost_lines(std::vector<double> &data, Shape shape) {
 }
 
 void exchange_vertical_ghost_lines(std::vector<double> &data, Shape shape) {
-    for (uint64_t i = 0; i < shape.cols; ++i) {
+    for (uint64_t i = 0; i < shape.rows; ++i) {
         const uint64_t left_ghost = i * shape.cols + 0;
         const uint64_t right_water = i * shape.cols + shape.cols-2;
         const uint64_t right_ghost = i * shape.cols + shape.cols-1;
