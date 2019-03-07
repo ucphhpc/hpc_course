@@ -13,40 +13,40 @@ constexpr auto g = 9.80665;  // gravitational acceleration
 constexpr auto dx = 1;
 constexpr auto dy = 1;
 
-void print(std::vector<double> &square_matrix, bool show_stat=true) {
-    if (std::sqrt(square_matrix.size()) * std::sqrt(square_matrix.size()) != square_matrix.size()) {
-        throw std::invalid_argument("print() - the matrix must be a square. The vector size is " + std::to_string(square_matrix.size()));
-    }
-    uint64_t size = std::sqrt(square_matrix.size());
-    for (uint64_t i=0; i<size; ++i) {
-        for (uint64_t j=0; j<size; ++j) {
-            if (!std::signbit(square_matrix[i*size + j])) {
+class Shape {
+public:
+    uint64_t rows;
+    uint64_t cols;
+    uint64_t total;
+    Shape(uint64_t rows, uint64_t cols) : rows(rows), cols(cols), total(rows*cols) {}
+};
+
+void print(std::vector<double> &matrix, const Shape &shape, bool show_stat=true) {
+    for (uint64_t i=0; i<shape.rows; ++i) {
+        for (uint64_t j=0; j<shape.cols; ++j) {
+            if (!std::signbit(matrix[i*shape.cols + j])) {
                 std::cout << " ";
             }
-            std::cout << std::scientific << square_matrix[i*size + j] << " ";
+            std::cout << std::scientific << matrix[i*shape.cols + j] << " ";
         }
         std::cout << "\n";
     }
     if (show_stat){
-        std::cout << "[shape: (" << size << ", " << size <<  ")"
-                  << ", min: " << *std::min_element(square_matrix.begin(), square_matrix.end())
-                  << ", max: " << *std::max_element(square_matrix.begin(), square_matrix.end())
-                  << ", avg: " << std::accumulate(square_matrix.begin(), square_matrix.end(), 0.0) / square_matrix.size()
-                  << ", checksum: " << std::accumulate(square_matrix.begin(), square_matrix.end(), 0.0)
+        std::cout << "[shape: (" << shape.rows << ", " << shape.cols <<  ")"
+                  << ", min: " << *std::min_element(matrix.begin(), matrix.end())
+                  << ", max: " << *std::max_element(matrix.begin(), matrix.end())
+                  << ", avg: " << std::accumulate(matrix.begin(), matrix.end(), 0.0) / matrix.size()
+                  << ", checksum: " << std::accumulate(matrix.begin(), matrix.end(), 0.0)
                   << "]\n";
     }
     std::cout << std::endl;
 }
 
-std::vector<double> extract_center(const std::vector<double> &square_matrix) {
-    if (std::sqrt(square_matrix.size()) * std::sqrt(square_matrix.size()) != square_matrix.size()) {
-        throw std::invalid_argument("extract_center() - the matrix must be a square. The vector size is " + std::to_string(square_matrix.size()));
-    }
-    uint64_t size = std::sqrt(square_matrix.size());
+std::vector<double> extract_center(const std::vector<double> &matrix, const Shape &shape) {
     std::vector<double> ret;
-    for(uint64_t i=1; i<size-1; ++i) {
-        for(uint64_t j=1; j<size-1; ++j) {
-            ret.push_back(square_matrix[i*size + j]);
+    for(uint64_t i=1; i<shape.rows-1; ++i) {
+        for(uint64_t j=1; j<shape.cols-1; ++j) {
+            ret.push_back(matrix[i*shape.cols + j]);
         }
     }
     return ret;
@@ -54,27 +54,23 @@ std::vector<double> extract_center(const std::vector<double> &square_matrix) {
 
 class Water {
 public:
-    uint64_t size;
+    Shape shape;
     std::vector<double> u;
     std::vector<double> v;
-    std::vector<double> eta;
+    std::vector<double> e;
+    Water(Shape shape) : shape(shape), u(shape.total, 0), v(shape.total, 0), e(shape.total, -100000) {}
 };
 
-Water createWater(uint64_t size) {
-    Water water;
-    water.size = size;
-    water.u = std::vector<double>(size * size, 0);
-    water.v = std::vector<double>(size * size, 0);
-    water.eta = std::vector<double>(size * size, -100000);
-
-    for (uint64_t i = 1; i < water.size-1; ++i) {
-        for (uint64_t j = 1; j < water.size-1; ++j) {
-            uint64_t ii = i - (size-2) / 2;
-            uint64_t jj = j - (size-2) / 2;
-            water.eta[i * water.size + j] = std::exp(-0.02 * (ii * ii + jj * jj));
+Water createWater(Shape shape) {
+    Water w(shape);
+    for (uint64_t i = 1; i < w.shape.rows-1; ++i) {
+        for (uint64_t j = 1; j < w.shape.cols-1; ++j) {
+            uint64_t ii = i - (w.shape.rows-2) / 2;
+            uint64_t jj = j - (w.shape.cols-2) / 2;
+            w.e[i * w.shape.cols + j] = std::exp(-0.02 * (ii * ii + jj * jj));
         }
     }
-    return water;
+    return w;
 }
 
 
@@ -83,41 +79,45 @@ Water createWater(uint64_t size) {
  * @param water      The water to update.
  */
 void integrate(Water &w) {
-    const uint64_t t_ghost = 0;
-    const uint64_t b_ghost = w.size - 1;
-    const uint64_t t_water = 1;
-    const uint64_t b_water = w.size - 2;
+    const uint64_t stride = w.shape.cols;
+    for (uint64_t i = 1; i < w.shape.rows-1; ++i) {
+        const uint64_t left_ghost = i * stride + 0;
+        const uint64_t right_water = i * stride + w.shape.cols-2;
+        w.u[left_ghost] = w.u[right_water];
+        w.v[left_ghost] = w.v[right_water];
+        w.e[left_ghost] = w.e[right_water];
 
-    for (uint64_t i = t_water; i <= b_water; ++i) {
-        w.u[i * w.size + t_ghost] = w.u[i * w.size + b_water];
-        w.v[i * w.size + t_ghost] = w.v[i * w.size + b_water];
-        w.eta[i * w.size + t_ghost] = w.eta[i * w.size + b_water];
-
-        w.u[i * w.size + b_ghost] = w.u[i * w.size + t_water];
-        w.v[i * w.size + b_ghost] = w.v[i * w.size + t_water];
-        w.eta[i * w.size + b_ghost] = w.eta[i * w.size + t_water];
+        const uint64_t right_ghost = i * stride + w.shape.cols-1;
+        const uint64_t left_water = i * stride + 1;
+        w.u[right_ghost] = w.u[left_water];
+        w.v[right_ghost] = w.v[left_water];
+        w.e[right_ghost] = w.e[left_water];
     }
 
-    for (uint64_t j = t_water; j <= b_water; ++j) {
-        w.u[t_ghost * w.size + j] = w.u[b_water * w.size + j];
-        w.v[t_ghost * w.size + j] = w.v[b_water * w.size + j];
-        w.eta[t_ghost * w.size + j] = w.eta[b_water * w.size + j];
+    for (uint64_t j = 1; j < w.shape.cols-1; ++j) {
+        const uint64_t top_ghost = 0 * stride + j;
+        const uint64_t bot_water = (w.shape.rows-2) * stride + j;
+        w.u[top_ghost] = w.u[bot_water];
+        w.v[top_ghost] = w.v[bot_water];
+        w.e[top_ghost] = w.e[bot_water];
 
-        w.u[b_ghost * w.size + j] = w.u[t_water * w.size + j];
-        w.v[b_ghost * w.size + j] = w.v[t_water * w.size + j];
-        w.eta[b_ghost * w.size + j] = w.eta[t_water * w.size + j];
+        const uint64_t bot_ghost = (w.shape.rows-1) * stride + j;
+        const uint64_t top_water = 1 * stride + j;
+        w.u[bot_ghost] = w.u[top_water];
+        w.v[bot_ghost] = w.v[top_water];
+        w.e[bot_ghost] = w.e[top_water];
     }
 
-    for (uint64_t i = t_water; i <= b_water; ++i) {
-        for (uint64_t j = t_water; j < b_water; ++j) {
-            w.u[i * w.size + j] = w.u[i * w.size + j] - dt * g * (w.eta[i * w.size + j + 1] - w.eta[i * w.size + j]) / dx;
-            w.v[i * w.size + j] = w.v[i * w.size + j] - dt * g * (w.eta[(i + 1) * w.size + j] - w.eta[i * w.size + j]) / dy;
+    for (uint64_t i = 1; i < w.shape.rows-1; ++i) {
+        for (uint64_t j = 1; j < w.shape.cols-1; ++j) {
+            w.u[i * stride + j] = w.u[i * stride + j] - dt * g * (w.e[i * stride + j + 1] - w.e[i * stride + j]) / dx;
+            w.v[i * stride + j] = w.v[i * stride + j] - dt * g * (w.e[(i + 1) * stride + j] - w.e[i * stride + j]) / dy;
         }
     }
 
-    for (uint64_t i = t_water; i <= b_water; ++i) {
-        for (uint64_t j = t_water; j < b_water; ++j) {
-            w.eta[i * w.size + j] = w.eta[i * w.size + j] - dt * (w.u[i * w.size + j] - w.u[i * w.size + j - 1]) / dx - dt * (w.v[i * w.size + j] - w.v[(i - 1) * w.size + j]) / dy;
+    for (uint64_t i = 1; i < w.shape.rows-1; ++i) {
+        for (uint64_t j = 1; j < w.shape.cols-1; ++j) {
+            w.e[i * stride + j] = w.e[i * stride + j] - dt * (w.u[i * stride + j] - w.u[i * stride + j - 1]) / dx - dt * (w.v[i * stride + j] - w.v[(i - 1) * stride + j]) / dy;
         }
     }
 }
@@ -163,20 +163,20 @@ void write_hdf5(const std::vector<std::vector<double> > &square_matrix_history, 
  * @param output_filename    The filename of the written water world history (HDF5 file)
  */
 void simulate(uint64_t num_of_iterations, uint64_t size, const std::string &output_filename) {
-    Water water_world = createWater(size);
+    Water water_world = createWater(Shape(size, size));
     std::vector<std::vector<double> > water_history;
     uint64_t checksum = 0;
     auto begin = std::chrono::steady_clock::now();
     for (uint64_t t = 0; t < num_of_iterations; ++t) {
         integrate(water_world);
         if (!output_filename.empty()) {
-            std::vector<double> eta = extract_center(water_world.eta);
-            water_history.push_back(eta);
-            std::cout << t << " -- min: " << *std::min_element(eta.begin(), eta.end())
-                      << ", max: " << *std::max_element(eta.begin(), eta.end())
-                      << ", avg: " << std::accumulate(eta.begin(), eta.end(), 0.0) / eta.size()
+            std::vector<double> e = extract_center(water_world.e, Shape(size, size));
+            water_history.push_back(e);
+            std::cout << t << " -- min: " << *std::min_element(e.begin(), e.end())
+                      << ", max: " << *std::max_element(e.begin(), e.end())
+                      << ", avg: " << std::accumulate(e.begin(), e.end(), 0.0) / e.size()
                       << "\n";
-            checksum += std::accumulate(eta.begin(), eta.end(), 0.0);
+            checksum += std::accumulate(e.begin(), e.end(), 0.0);
         }
     }
     if (!output_filename.empty()) {
