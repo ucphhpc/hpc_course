@@ -9,18 +9,14 @@ import numpy as np
 
 
 class AnimatedGif:
-    def __init__(self, size=(800, 800)):
+    def __init__(self, zlim, size=(800, 800)):
         self.fig = plt.figure()
         self.fig.set_size_inches(size[0] / 100, size[1] / 100)
         self.ax = self.fig.gca(projection='3d')
-        self.zlim = None
+        self.ax.set_zlim(zlim)
         self.images = []
 
     def add(self, image):
-        if self.zlim is None:
-            self.ax.set_zlim((0, image.max() * 2))
-            self.zlim = (0, image.max() * 2)
-            self.ax.set_zlim(self.zlim)
         x, y = np.meshgrid(np.arange(image.shape[0]), np.arange(image.shape[1]))
         plt_im = self.ax.plot_surface(x, y, image, color='b')
         self.images.append([plt_im])
@@ -32,12 +28,14 @@ class AnimatedGif:
 
 def main(args):
     with h5py.File(args.input_hdf5_file, 'r') as f:
-        video = AnimatedGif()
+        video = AnimatedGif(zlim=(0, args.zlim))
+        count = 0
         for frame_id in sorted([int(k) for k in f.keys()]):
-            frame = np.array(f[str(frame_id)]['/%d/water' % frame_id])
-            if frame_id % 10 == 0:
-                print(frame.shape)
-                video.add(frame)
+            if frame_id >= args.start:
+                frame = np.array(f[str(frame_id)]['/%d/water' % frame_id])
+                if count % args.step == 0:
+                    video.add(frame)
+                count += 1
         video.save(args.output_video_file, args.fps)
 
 
@@ -58,6 +56,24 @@ if __name__ == '__main__':
         type=int,
         default=10,
         help='Frames per second.'
+    )
+    parser.add_argument(
+        '--step',
+        type=int,
+        default=10,
+        help='Frames to skip to get to the next frame (default is 10).'
+    )
+    parser.add_argument(
+        '--start',
+        type=int,
+        default=0,
+        help='Start frame number (default is 0, which is the first frame).'
+    )
+    parser.add_argument(
+        '--zlim',
+        type=int,
+        default=2,
+        help='Set the max elevation.'
     )
     parser.add_argument(
         '--format',

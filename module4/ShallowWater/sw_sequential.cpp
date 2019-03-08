@@ -8,87 +8,130 @@
 #include <omp.h>
 #include <cassert>
 
-constexpr auto dt = 0.05; // seconds per sample
-constexpr auto g = 9.80665;  // gravitational acceleration
-constexpr auto dx = 1;
-constexpr auto dy = 1;
+constexpr auto dt = 0.05;   // Size of the integration time step
+constexpr auto g = 9.80665; // Gravitational acceleration
+constexpr auto dx = 1;      // Integration step size in the horizontal direction
+constexpr auto dy = 1;      // Integration step size in the horizontal direction
 
+/** Representation of a two dimensional shape */
 class Shape {
 public:
-    uint64_t rows;
-    uint64_t cols;
-    uint64_t total;
-    Shape(uint64_t rows, uint64_t cols) : rows(rows), cols(cols), total(rows*cols) {}
+    uint64_t rows;   // Number of rows
+    uint64_t cols;   // Number of columns
+    uint64_t total;  // Total number of elements
+
+    /** Create a new shape
+     *
+     * @param rows  Number of rows
+     * @param cols  Number of columns
+     */
+    Shape(uint64_t rows, uint64_t cols) : rows(rows), cols(cols), total(rows * cols) {}
 };
 
-void print(std::vector<double> &matrix, const Shape &shape, bool show_stat=true) {
-    for (uint64_t i=0; i<shape.rows; ++i) {
-        for (uint64_t j=0; j<shape.cols; ++j) {
-            if (!std::signbit(matrix[i*shape.cols + j])) {
+/** Help function to write the `data` to screen.
+ *
+ * @param data       The data to print.
+ * @param shape      The shape of `data`.
+ * @param show_stat  Whether to print additional statistics.
+ */
+void print(std::vector<double> &data, const Shape &shape, bool show_stat = true) {
+    for (uint64_t i = 0; i < shape.rows; ++i) {
+        for (uint64_t j = 0; j < shape.cols; ++j) {
+            if (!std::signbit(data[i * shape.cols + j])) {
                 std::cout << " ";
             }
-            std::cout << std::scientific << matrix[i*shape.cols + j] << " ";
+            std::cout << std::scientific << data[i * shape.cols + j] << " ";
         }
         std::cout << "\n";
     }
-    if (show_stat){
-        std::cout << "[shape: (" << shape.rows << ", " << shape.cols <<  ")"
-                  << ", min: " << *std::min_element(matrix.begin(), matrix.end())
-                  << ", max: " << *std::max_element(matrix.begin(), matrix.end())
-                  << ", avg: " << std::accumulate(matrix.begin(), matrix.end(), 0.0) / matrix.size()
-                  << ", checksum: " << std::accumulate(matrix.begin(), matrix.end(), 0.0)
+    if (show_stat) {
+        std::cout << "[shape: (" << shape.rows << ", " << shape.cols << ")"
+                  << ", min: " << *std::min_element(data.begin(), data.end())
+                  << ", max: " << *std::max_element(data.begin(), data.end())
+                  << ", avg: " << std::accumulate(data.begin(), data.end(), 0.0) / data.size()
+                  << ", checksum: " << std::accumulate(data.begin(), data.end(), 0.0)
                   << "]\n";
     }
     std::cout << std::endl;
 }
 
-std::vector<double> extract_center(const std::vector<double> &matrix, const Shape &shape) {
-    std::vector<double> ret;
-    for(uint64_t i=1; i<shape.rows-1; ++i) {
-        for(uint64_t j=1; j<shape.cols-1; ++j) {
-            ret.push_back(matrix[i*shape.cols + j]);
-        }
-    }
-    return ret;
-}
-
+/** Representation of a water world including ghost lines, which is a "1-cell padding" of rows and columns
+ *  around the world. These ghost lines is a technique to implement periodic boundary conditions. */
 class Water {
 public:
-    Shape shape;
-    std::vector<double> u;
-    std::vector<double> v;
-    std::vector<double> e;
+    Shape shape; // The shape of the water world including ghost lines.
+    std::vector<double> u; // The speed in the horizontal direction.
+    std::vector<double> v; // The speed in the vertical direction.
+    std::vector<double> e; // The water elevation.
+
     Water(Shape shape) : shape(shape), u(shape.total, 0), v(shape.total, 0), e(shape.total, -100000) {}
 };
 
+/** Create a new water world. The would contains a droplet in the center.
+ *
+ * @param shape The shape of the world including ghost lines
+ * @return      The new water world
+ */
 Water createWater(Shape shape) {
     Water w(shape);
-    for (uint64_t i = 1; i < w.shape.rows-1; ++i) {
-        for (uint64_t j = 1; j < w.shape.cols-1; ++j) {
-            uint64_t ii = i - (w.shape.rows-2) / 2;
-            uint64_t jj = j - (w.shape.cols-2) / 2;
+    for (uint64_t i = 1; i < w.shape.rows - 1; ++i) {
+        for (uint64_t j = 1; j < w.shape.cols - 1; ++j) {
+            uint64_t ii = i - (w.shape.rows - 2) / 2;
+            uint64_t jj = j - (w.shape.cols - 2) / 2;
             w.e[i * w.shape.cols + j] = std::exp(-0.02 * (ii * ii + jj * jj));
         }
     }
     return w;
 }
 
+/** Help function to remove the vertical and/or the horizontal ghost lines.
+ *
+ * @param data        The input data, which could be the water elevation or the speed.
+ * @param shape       The shape of `data` including ghost lines.
+ * @param vertical    Whether to remove vertical ghost lines.
+ * @param horizontal  Whether to remove horizontal ghost lines.
+ * @return
+ */
+std::vector<double> remove_ghost_lines(const std::vector<double> &data, const Shape &shape,
+                                       bool vertical, bool horizontal) {
+    uint64_t v = vertical ? 1 : 0;
+    uint64_t h = horizontal ? 1 : 0;
+    std::vector<double> ret;
+    for (uint64_t i = v; i < shape.rows - h; ++i) {
+        for (uint64_t j = h; j < shape.cols - v; ++j) {
+            ret.push_back(data[i * shape.cols + j]);
+        }
+    }
+    return ret;
+}
+
+
+/** Exchange the horizontal ghost lines i.e. copy the second data row to the very last data row and vice versa.
+ *
+ * @param data   The data update, which could be the water elevation `e` or the speed in the horizontal direction `u`.
+ * @param shape  The shape of data including the ghost lines.
+ */
 void exchange_horizontal_ghost_lines(std::vector<double> &data, Shape shape) {
     for (uint64_t i = 0; i < shape.cols; ++i) {
         const uint64_t top_ghost = 0 * shape.cols + i;
-        const uint64_t bot_water = (shape.rows-2) * shape.cols + i;
-        const uint64_t bot_ghost = (shape.rows-1) * shape.cols + i;
+        const uint64_t bot_water = (shape.rows - 2) * shape.cols + i;
+        const uint64_t bot_ghost = (shape.rows - 1) * shape.cols + i;
         const uint64_t top_water = 1 * shape.cols + i;
         data[top_ghost] = data[bot_water];
         data[bot_ghost] = data[top_water];
     }
 }
 
+/** Exchange the vertical ghost lines i.e. copy the second data column to the rightmost data column and vice versa.
+ *
+ * @param data   The data update, which could be the water elevation `e` or the speed in the vertical direction `v`.
+ * @param shape  The shape of data including the ghost lines.
+ */
 void exchange_vertical_ghost_lines(std::vector<double> &data, Shape shape) {
     for (uint64_t i = 0; i < shape.rows; ++i) {
         const uint64_t left_ghost = i * shape.cols + 0;
-        const uint64_t right_water = i * shape.cols + shape.cols-2;
-        const uint64_t right_ghost = i * shape.cols + shape.cols-1;
+        const uint64_t right_water = i * shape.cols + shape.cols - 2;
+        const uint64_t right_ghost = i * shape.cols + shape.cols - 1;
         const uint64_t left_water = i * shape.cols + 1;
         data[left_ghost] = data[right_water];
         data[right_ghost] = data[left_water];
@@ -97,7 +140,7 @@ void exchange_vertical_ghost_lines(std::vector<double> &data, Shape shape) {
 
 /** One integration step
  *
- * @param water      The water to update.
+ * @param w The water world to update.
  */
 void integrate(Water &w) {
     exchange_horizontal_ghost_lines(w.e, w.shape);
@@ -107,20 +150,20 @@ void integrate(Water &w) {
     exchange_vertical_ghost_lines(w.u, w.shape);
 
     const uint64_t stride = w.shape.cols;
-    for (uint64_t i = 1; i < w.shape.rows-1; ++i) {
-        for (uint64_t j = 1; j < w.shape.cols-1; ++j) {
+    for (uint64_t i = 1; i < w.shape.rows - 1; ++i) {
+        for (uint64_t j = 1; j < w.shape.cols - 1; ++j) {
             w.u[i * stride + j] = w.u[i * stride + j] - dt * g * (w.e[i * stride + j + 1] - w.e[i * stride + j]) / dx;
             w.v[i * stride + j] = w.v[i * stride + j] - dt * g * (w.e[(i + 1) * stride + j] - w.e[i * stride + j]) / dy;
         }
     }
 
-    for (uint64_t i = 1; i < w.shape.rows-1; ++i) {
-        for (uint64_t j = 1; j < w.shape.cols-1; ++j) {
-            w.e[i * stride + j] = w.e[i * stride + j] - dt * (w.u[i * stride + j] - w.u[i * stride + j - 1]) / dx - dt * (w.v[i * stride + j] - w.v[(i - 1) * stride + j]) / dy;
+    for (uint64_t i = 1; i < w.shape.rows - 1; ++i) {
+        for (uint64_t j = 1; j < w.shape.cols - 1; ++j) {
+            w.e[i * stride + j] = w.e[i * stride + j] - dt * (w.u[i * stride + j] - w.u[i * stride + j - 1]) / dx -
+                                  dt * (w.v[i * stride + j] - w.v[(i - 1) * stride + j]) / dy;
         }
     }
 }
-
 
 /** Write data to a hdf5 file
  *
@@ -141,11 +184,12 @@ void write_hdf5(H5::Group &group, const std::string &name, const std::vector <hs
  * @param water_history  Vector of the all water worlds to write
  * @param filename       The output filename of the HDF5 file
  */
-void write_hdf5(const std::vector<std::vector<double> > &square_matrix_history, const std::string &filename) {
+void write_hdf5(const std::vector <std::vector<double>> &square_matrix_history, const std::string &filename) {
     H5::H5File file(filename, H5F_ACC_TRUNC);
     for (uint64_t i = 0; i < square_matrix_history.size(); ++i) {
         H5::Group group(file.createGroup("/" + std::to_string(i)));
-        if (std::sqrt(square_matrix_history[i].size()) * std::sqrt(square_matrix_history[i].size()) != square_matrix_history[i].size()) {
+        if (std::sqrt(square_matrix_history[i].size()) * std::sqrt(square_matrix_history[i].size()) !=
+            square_matrix_history[i].size()) {
             throw std::invalid_argument("write_hdf5() - the square_matrix matrices must be squares");
         }
         uint64_t size = std::sqrt(square_matrix_history[i].size());
@@ -153,23 +197,24 @@ void write_hdf5(const std::vector<std::vector<double> > &square_matrix_history, 
     }
 }
 
-
-
-/** Simulation of a flat word climate
+/** Simulation of shallow water
  *
- * @param num_of_iterations  Number of time steps to simulate
- * @param size               Size of the water world including the ghost lines
+ * @param num_of_iterations  The number of time steps to simulate
+ * @param size               The size of the water world excluding ghost lines
  * @param output_filename    The filename of the written water world history (HDF5 file)
  */
 void simulate(uint64_t num_of_iterations, uint64_t size, const std::string &output_filename) {
-    Water water_world = createWater(Shape(size, size));
-    std::vector<std::vector<double> > water_history;
+    // We pad the world with ghost lines (two in each dimension)
+    Shape shape_with_ghost_lines = Shape(size + 2, size + 2);
+    Water water_world = createWater(shape_with_ghost_lines);
+
+    std::vector <std::vector<double>> water_history;
     uint64_t checksum = 0;
     auto begin = std::chrono::steady_clock::now();
     for (uint64_t t = 0; t < num_of_iterations; ++t) {
         integrate(water_world);
         if (!output_filename.empty()) {
-            std::vector<double> e = extract_center(water_world.e, Shape(size, size));
+            std::vector<double> e = remove_ghost_lines(water_world.e, shape_with_ghost_lines, true, true);
             water_history.push_back(e);
             std::cout << t << " -- min: " << *std::min_element(e.begin(), e.end())
                       << ", max: " << *std::max_element(e.begin(), e.end())
@@ -212,6 +257,6 @@ int main(int argc, char **argv) {
     }
     const std::string &output_filename = args.getCmdOption("--out");
 
-    simulate(iterations, size+2, output_filename);
+    simulate(iterations, size, output_filename);
     return 0;
 }
