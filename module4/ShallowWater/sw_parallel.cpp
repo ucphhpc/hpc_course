@@ -110,8 +110,8 @@ std::vector<double> remove_ghost_lines(const std::vector<double> &data, const Sh
     uint64_t v = vertical ? 1 : 0;
     uint64_t h = horizontal ? 1 : 0;
     std::vector<double> ret;
-    for (uint64_t i = v; i < shape.rows - h; ++i) {
-        for (uint64_t j = h; j < shape.cols - v; ++j) {
+    for (uint64_t i = h; i < shape.rows - h; ++i) {
+        for (uint64_t j = v; j < shape.cols - v; ++j) {
             ret.push_back(data[i * shape.cols + j]);
         }
     }
