@@ -220,6 +220,7 @@ void simulate(uint64_t num_of_iterations, uint64_t size, const std::string &outp
     // We pad the world with ghost lines (two in each dimension)
     Shape shape_with_ghost_lines = Shape(size + 2, size + 2);
     Water water_world = createWater(shape_with_ghost_lines, Shape(size, size), 0, 0);
+    MPI_Barrier(MPI_COMM_WORLD);
 
     std::vector <std::vector<double>> water_history;
     uint64_t checksum = 0;
@@ -242,6 +243,9 @@ void simulate(uint64_t num_of_iterations, uint64_t size, const std::string &outp
             }
         }
     }
+    // Make sure that all MPI-processes are finished.
+    MPI_Barrier(MPI_COMM_WORLD);
+
     // Rank zero writes the water history to file
     if (mpi_rank == 0) {
         if (!output_filename.empty()) {
