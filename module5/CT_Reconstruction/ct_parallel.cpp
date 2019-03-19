@@ -110,8 +110,6 @@ ProjectionData load_projection_data(int projection_id, int num_voxels, const std
     // Load 2D projection data
     data.projection = read_file(detector_rows * detector_columns, projection_id * detector_rows * detector_columns,
                                 input_dir + "/projections.bin");
-    std::cout << projection_id << ": " << std::accumulate(data.projection.begin(), data.projection.end(), 0.0)
-              << std::endl;
 
     // Load transform matrix used to align the 3D volume position towards the recorded 2D projection
     data.transform_matrix = read_file(3 * 4, projection_id * 3 * 4, input_dir + "/transform.bin");
