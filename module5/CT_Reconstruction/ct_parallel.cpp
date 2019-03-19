@@ -172,13 +172,15 @@ void reconstruction(int num_voxels, const std::string &input_dir, const std::str
 
     // TODO: gather `recon_volume_size` from all the MPI-processes and combine them into the final reconstruction
 
-    if (!output_filename.empty() && mpi_rank == 0) {
-        write_file(recon_volume, 0, output_filename);
-    }
     MPI_Barrier(MPI_COMM_WORLD);
-    auto end = std::chrono::steady_clock::now();
-    std::cout << "checksum: " << checksum << std::endl;
-    std::cout << "elapsed time: " << (end - begin).count() / 1000000000.0 << " sec" << std::endl;
+    if (mpi_rank == 0) {
+        if (!output_filename.empty()) {
+            write_file(recon_volume, 0, output_filename);
+        }
+        auto end = std::chrono::steady_clock::now();
+        std::cout << "checksum: " << checksum << std::endl;
+        std::cout << "elapsed time: " << (end - begin).count() / 1000000000.0 << " sec" << std::endl;
+    }
 }
 
 
