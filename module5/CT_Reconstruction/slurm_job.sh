@@ -4,5 +4,5 @@
 export OMP_NUM_THREADS=32
 
 # Run the program
-mpirun shifter --image=nielsbohr/hpc-notebook ./ct_parallel --num-voxels 256 --input ~/slurm_readonly/ct_data
+mpirun singularity ~/modi_images/hpc-notebook-latest.simg ./ct_parallel --num-voxels 256 --input ~/modi_mount/module5/CT_Reconstruction/ct_data
 
