@@ -10,6 +10,8 @@ Forest::Forest() {
     this->initialize();
 }
 
+// Initializes the forest as a 100x100 matrix of trees with the middle tree on fire
+// Saves the initial forest to an HDF5 file
 void Forest::initialize() {
     this->_trees = ones<double>({100, 100});
     this->_trees *= -1;
@@ -28,17 +30,19 @@ void Forest::initialize() {
      this->save_state(0);
 }
 
-
-
 void Forest::step() {
-    // TODO, implement the step function,
+    // TODO, implement the step function
+    // For each step of the simulation, each tree on fire should have a chance to spread to a tree
+    // that is both not on fire and hasn't been burned already.
+    // In turn, for each step of the simulation all previously burning trees should be set to being already burned.
+
+    // Tree states
     // -1 == already burned
     // 0 == alive tree
     // 1 == tree on fire
-    
-    // The fire should only be able to spread to neighbouring trees at an appropriate rate.
 }
 
+// Function that saves the current state of the forest trees to an HDF5 file into the ./forest_steps directory
 void Forest::save_state(uint64_t postfix_num = 0) {
     const int dir_err = system("mkdir -p forest_steps");
     if (dir_err == -1) {
