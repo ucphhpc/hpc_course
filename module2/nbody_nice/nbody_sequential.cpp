@@ -150,9 +150,7 @@ void integrate(SolarSystem &solar_system, double dt) {
     // Update the velocity of the asteroids
     for (uint64_t i = 0; i < solar_system.asteroids.size(); ++i) {
         for (uint64_t j = 0; j < solar_system.sun_and_planets.size(); ++j) {
-            if (i != j) {
-                update_velocity(solar_system.asteroids[i], solar_system.sun_and_planets[j], dt);
-            }
+            update_velocity(solar_system.asteroids[i], solar_system.sun_and_planets[j], dt);
         }
     }
 
