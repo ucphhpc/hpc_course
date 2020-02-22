@@ -24,7 +24,7 @@ void Forest::initialize() {
             this->_trees.offset());
 
     BhArray<double> vertical(this->_trees.base(), {view_size, 2}, {view_size, view_size-1}, this->_trees.offset());
-     // Set the borders to have burned already
+     // Set the borders to have been burned already
      horizontal = 0;
      vertical = 0;
      this->save_state(0);
@@ -32,9 +32,12 @@ void Forest::initialize() {
 
 void Forest::step() {
     // TODO, implement the step function
-    // For each step of the simulation, each tree on fire should have a chance to spread to a tree
-    // that is both not on fire and hasn't been burned already.
-    // In turn, for each step of the simulation all previously burning trees should be set to being already burned.
+    
+    // For each step of the simulation, each tree on fire should have a chance to spread to their neighbouring trees 
+    // who is not already on fire this step or has been previously burned
+
+    // In turn, at the end of a step, all trees that were burning in the previous step should be set to having been burned.
+    // Meaning that a tree will not be on fire for more than one simulation step.
 
     // Tree states
     // -1 == already burned
