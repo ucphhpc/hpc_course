@@ -24,11 +24,11 @@ all: nbody_sequential
 
 # Compile using gcc compiler
 nbody_sequential_gcc: nbody_sequential.cpp
-        h5c++ -o nbody_sequential_gcc $(FLAGS) $(INC) $(LIB) nbody_sequential.cpp
+	h5c++ -o nbody_sequential_gcc $(FLAGS) $(INC) $(LIB) nbody_sequential.cpp
 
 # Compile using gcc compiler
 nbody_vectorised_gcc: nbody_vectorised.cpp
-        h5c++ -o nbody_vectorised_gcc $(FLAGS) $(INC) $(LIB) nbody_vectorised.cpp
+	h5c++ -o nbody_vectorised_gcc $(FLAGS) $(INC) $(LIB) nbody_vectorised.cpp
 
 # Compile using Nvidia HPC compiler
 nbody_sequential: nbody_sequential.cpp
