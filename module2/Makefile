@@ -22,11 +22,11 @@ MODULEPATH:=/opt/nvidia/hpc_sdk/modulefiles:$(MODULEPATH)
 
 all: nbody_sequential
 
-# Compile using Nvidia HPC compiler
+# Compile using gcc compiler
 nbody_sequential_gcc: nbody_sequential.cpp
         h5c++ -o nbody_sequential_gcc $(FLAGS) $(INC) $(LIB) nbody_sequential.cpp
 
-        # Compile with OpenACC enabled
+# Compile using gcc compiler
 nbody_vectorised_gcc: nbody_vectorised.cpp
         h5c++ -o nbody_vectorised_gcc $(FLAGS) $(INC) $(LIB) nbody_vectorised.cpp
 
