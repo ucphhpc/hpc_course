@@ -144,18 +144,16 @@ void write_hdf5(H5::Group &group, const std::string &name, const std::vector <hs
 }
 
 /** Write a history of the world temperatures to a HDF5 file
- *
- * @param world_history  Vector of the all worlds to write
- * @param filename       The output filename of the HDF5 file
+ *s
+ * @param world     world to write
+ * @param filename  The output filename of the HDF5 file
  */
-void write_hdf5(const std::vector <World> &world_history, const std::string &filename) {
+void write_hdf5(const World &world, const std::string &filename, uint64_t t) {
 
-    H5::H5File file(filename, H5F_ACC_TRUNC);
+    static H5::H5File file(filename, H5F_ACC_TRUNC);
 
-    for (uint64_t i = 0; i < world_history.size(); ++i) {
-        H5::Group group(file.createGroup("/" + std::to_string(i)));
-        write_hdf5(group, "world", {world_history[i].latitude, world_history[i].longitude}, world_history[i].data);
-    }
+    H5::Group group(file.createGroup("/" + std::to_string(t)));
+    write_hdf5(group, "world", {world.latitude, world.longitude}, world.data);
 }
 
 /** Simulation of a flat word climate
@@ -169,22 +167,18 @@ void simulate(uint64_t num_of_iterations, const std::string &model_filename, con
     World world = read_world_model(model_filename);
 
     const double t_div = world.longitude / 36.0;
-    std::vector <World> world_history;
     uint64_t checksum = 0;
     auto begin = std::chrono::steady_clock::now();
     for (uint64_t t = 0; t < num_of_iterations; ++t) {
         integrate(world, t / t_div);
         if (!output_filename.empty()) {
-            world_history.push_back(world);
+            write_hdf5(world, output_filename, t);
             std::cout << t << " -- min: " << *std::min_element(world.data.begin(), world.data.end())
                       << ", max: " << *std::max_element(world.data.begin(), world.data.end())
                       << ", avg: " << std::accumulate(world.data.begin(), world.data.end(), 0.0) / world.data.size()
                       << "\n";
             checksum += std::accumulate(world.data.begin(), world.data.end(), 0.0);
         }
-    }
-    if (!output_filename.empty()) {
-        write_hdf5(world_history, output_filename);
     }
     auto end = std::chrono::steady_clock::now();
     if (!output_filename.empty()) {
