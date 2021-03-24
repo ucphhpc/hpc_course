@@ -154,7 +154,6 @@ void reconstruction(int num_voxels, const std::string &input_dir, const std::str
                 }
             }
         }
-        checksum += std::accumulate(recon_volume.begin(), recon_volume.end(), 0.0);
     }
 
     if (!output_filename.empty()) {
@@ -162,6 +161,7 @@ void reconstruction(int num_voxels, const std::string &input_dir, const std::str
     }
 
     auto end = std::chrono::steady_clock::now();
+    checksum = std::accumulate(recon_volume.begin(), recon_volume.end(), 0.0);
     std::cout << "checksum: " << checksum << std::endl;
     std::cout << "elapsed time: " << (end - begin).count() / 1000000000.0 << " sec" << std::endl;
 }

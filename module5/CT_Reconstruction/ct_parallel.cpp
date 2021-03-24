@@ -23,6 +23,7 @@ constexpr int detector_columns = 256;
 
 
 // TODO: this function should use MPI-IO to read files
+// TODO: use either file pointer or explicit offsets
 
 /** Read binary file
  *
@@ -128,7 +129,8 @@ ProjectionData load_projection_data(int projection_id, int num_voxels, const std
  */
 void reconstruction(int num_voxels, const std::string &input_dir, const std::string &output_filename) {
 
-    // Notice, in this assignment we also times the disk access
+    // TODO: time read of projection data, compute and write of results indepedently
+    // Notice, in this assignment we also time the disk access
     auto begin = std::chrono::steady_clock::now();
 
     double checksum = 0;
@@ -137,13 +139,11 @@ void reconstruction(int num_voxels, const std::string &input_dir, const std::str
     uint64_t recon_volume_size = num_voxels * num_voxels * num_voxels;
     std::vector<float> recon_volume(recon_volume_size, 0);
 
-    // TODO: divide the projections between MPI-processes
-
+    // TODO: change to only loop over the projections relevant for the MPI rank
     for (int projection_id = 0; projection_id < num_projections; ++projection_id) {
         ProjectionData pdata = load_projection_data(projection_id, num_voxels, input_dir);
 
-        // TODO: Use OpenMP to parallelize local calculation
-
+        // TODO: Use OpenMP to parallelise local calculation
         for (int z = 0; z < num_voxels; ++z) {
             uint64_t size = num_voxels * num_voxels;
             for (uint64_t i = 0; i < size; ++i) {
@@ -167,16 +167,15 @@ void reconstruction(int num_voxels, const std::string &input_dir, const std::str
                 }
             }
         }
-        checksum += std::accumulate(recon_volume.begin(), recon_volume.end(), 0.0);
     }
 
-    // TODO: gather `recon_volume_size` from all the MPI-processes and combine them into the final reconstruction
-
+    // TODO: gather `recon_volume_size` from all the MPI-processes and combine (sum) them into the final reconstruction
     MPI_Barrier(MPI_COMM_WORLD);
     if (mpi_rank == 0) {
         if (!output_filename.empty()) {
             write_file(recon_volume, 0, output_filename);
         }
+        checksum += std::accumulate(recon_volume.begin(), recon_volume.end(), 0.0);
         auto end = std::chrono::steady_clock::now();
         std::cout << "checksum: " << checksum << std::endl;
         std::cout << "elapsed time: " << (end - begin).count() / 1000000000.0 << " sec" << std::endl;
