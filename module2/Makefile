@@ -1,11 +1,27 @@
 CXX := g++
-CXXFLAGS := -g -std=c++14
 
-MD: Water_sequential.o
-	$(CXX) Water_sequential.o -o MD # Runs second ... with object files you only recompile changes
+#######################################################
+# Optimization flags are chosen as the last definition.
+# Comment out using "#" at the begining of the line or rearrange according to your needs.
+#
+# Fastest executable (-ffast-math removes checking for NaNs and other things)
+OPT=-O3 -ffast-math
 
-Water_sequential.o: Water_sequential.cpp
-	$(CXX) -c Water_sequential.cpp $(CXXFLAGS) -o Water_sequential.o # Runs first
+# Add profiling to code
+OPT=-O1 -pg
+
+# Faster compilation time
+OPT=-O1
+
+CXXFLAGS := $(OPT) -Wall -march=znver1 -g -std=c++14
+
+default: seq vec
+
+seq: Water_sequential.cpp
+	$(CXX) Water_sequential.cpp $(CXXFLAGS) -o seq
+
+vec: Water_vectorised.cpp
+	$(CXX) Water_vectorised.cpp $(CXXFLAGS) -fopenmp-simd -o vec
 
 clean:
-	rm -fr Water_sequential.o MD
+	rm -fr seq vec

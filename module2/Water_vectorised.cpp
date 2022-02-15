@@ -247,8 +247,8 @@ void UpdateNonBondedForces(System& sys){
     /* nonbonded forces: only a force between atoms in different molecules
        The total non-bonded forces come from Lennard Jones (LJ) and coulomb interactions
        U = ep[(sigma/r)^12-(sigma/r)^6] + C*q1*q2/r */
-    for (int i = 0;   i < sys.molecules.size(); i++)
-    for (int j = i+1; j < sys.molecules.size(); j++)
+    for (long unsigned int i = 0;   i < sys.molecules.size(); i++)
+    for (long unsigned int j = i+1; j < sys.molecules.size(); j++)
     for (auto& atom1 : sys.molecules[i].atoms)
         for (auto& atom2 : sys.molecules[j].atoms){ // iterate over all pairs of atoms, similar as well as dissimilar
             Vec3 dp = atom1.p-atom2.p;
