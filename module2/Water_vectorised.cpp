@@ -102,6 +102,40 @@ public:
     std::vector<Angle> angles;        // the angle potentials, for water just the single one, but keep it a list for generality
 };
 
+// ===============================================================================
+// Two new classes arranging Atoms in a Structure-of-Array data structure
+// ===============================================================================
+
+/* atom class, represent N instances of identical atoms */
+class Atoms {
+public:
+    // The mass of the atom in (U)
+    double mass;
+    double ep;            // epsilon for LJ potential
+    double sigma;         // Sigma, somehow the size of the atom
+    double charge;        // charge of the atom (partial charge)
+    std::string name;     // Name of the atom
+    // the position in (nm), velocity (nm/ps) and forces (k_BT/nm) of the atom
+    std::vector<Vec3> p,v,f;
+    // constructor, takes parameters and allocates p, v and f properly to have N_identical elements
+    Atoms(double mass, double ep, double sigma, double charge, std::string name, size_t N_identical) 
+    : mass{mass}, ep{ep}, sigma{sigma}, charge{charge}, name{name}, 
+      p{N_identical, {0,0,0}}, v{N_identical, {0,0,0}}, f{N_identical, {0,0,0}}
+    {}
+};
+
+/* molecule class for no_mol identical molecules */
+class Molecules {
+public:
+    std::vector<Atoms> atoms;         // list of atoms in the N identical molecule
+    std::vector<Bond> bonds;          // the bond potentials, eg for water the left and right bonds
+    std::vector<Angle> angles;        // the angle potentials, for water just the single one, but keep it a list for generality
+    int no_mol;
+};
+
+// ===============================================================================
+
+
 /* system class */
 class System {
 public:
