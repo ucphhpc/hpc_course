@@ -22,7 +22,7 @@ void master (int nworker) {
 
     // set up a random number generator
     std::random_device rd;
-    std::default_random_engine engine(rd());
+    //std::default_random_engine engine(rd());
     std::default_random_engine engine;
     engine.seed(RANDOM_SEED);
     // make a distribution of random integers in the interval [0:30]
