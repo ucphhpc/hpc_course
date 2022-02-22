@@ -45,7 +45,7 @@ void master (int nworker) {
         for (int itask=0; itask<NTASKS; itask++)
         if (result[itask]==worker) {
             tasksdone++;
-            workdone += task[i];
+            workdone += task[itask];
         }
         std::cout << "Master: Worker " << worker << " solved " << tasksdone << 
                     " tasks\n";    
