@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <iomanip>
 #include <random>
 #include <chrono>
 #include <thread>
@@ -166,7 +167,7 @@ void master (int nworker, Data& ds) {
     // diagnostics
     // extract index and value for best accuracy
     double best_accuracy_score=0;
-    long idx_best;
+    long idx_best=0;
     for (long k=0; k<n_settings; k++)
         if (accuracy[k] > best_accuracy_score) {
             best_accuracy_score = accuracy[k];
