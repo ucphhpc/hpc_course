@@ -14,9 +14,12 @@ OPT=-O3 -ffast-math
 # Faster compilation time
 #OPT=-O1
 
-CXXFLAGS := -I../include $(OPT) -Wall -march=native -g -std=c++14
+INCLUDE := -I../include
 
-ACC := -I../include -acc=gpu -Minfo=acc
+CXXFLAGS := $(INCLUDE) $(OPT) -Wall -march=native -g -std=c++14
+
+ACC := $(INCLUDE) -acc=gpu -Minfo=acc
+
 
 .PHONY: clean all
 
