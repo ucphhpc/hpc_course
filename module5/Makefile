@@ -1,5 +1,4 @@
-CXX := g++
-PGCXX := pgc++
+CXX := nvc++
 
 #######################################################
 # Optimization flags are chosen as the last definition.
@@ -18,7 +17,7 @@ INCLUDE := -I../include
 
 CXXFLAGS := $(INCLUDE) $(OPT) -Wall -march=native -g -std=c++14
 
-ACC := $(INCLUDE) -acc=gpu -Minfo=acc
+ACC := -acc=gpu -Minfo=acc
 
 
 .PHONY: clean all
@@ -29,7 +28,7 @@ sw_sequential: sw_sequential.cpp
 	$(CXX) $(CXXFLAGS) sw_sequential.cpp -o sw_sequential
 
 sw_parallel: sw_parallel.cpp
-	$(PGCXX) $(ACC) sw_parallel.cpp -o sw_parallel
+	$(CXX) $(CXXFLAGS) $(ACC) sw_parallel.cpp -o sw_parallel
 
 clean:
 	rm -f sw_sequential sw_parallel *.o
