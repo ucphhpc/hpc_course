@@ -137,7 +137,6 @@ void simulate(uint64_t num_of_iterations, const std::string &output_filename) {
 
     std::vector <std::array<std::array<real_t, NX>, NY>> water_history;
     double checksum = 0;
-    size_t N = NX*NY;
 
     auto begin = std::chrono::steady_clock::now();
 
@@ -161,7 +160,7 @@ void simulate(uint64_t num_of_iterations, const std::string &output_filename) {
 /** Main function that parses the command line and start the simulation */
 int main(int argc, char **argv) {
     util::ArgParser args(argc, argv);
-    int64_t size, iterations;
+    int64_t iterations;
     if (args.cmdOptionExists("--iter")) {
         iterations = std::stoi(args.getCmdOption("--iter"));
         if (iterations < 0) {

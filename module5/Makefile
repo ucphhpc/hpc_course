@@ -5,7 +5,7 @@ CXX := nvc++
 # Comment out using "#" at the begining of the line or rearrange according to your needs.
 #
 # Fastest executable (-ffast-math removes checking for NaNs and other things)
-OPT=-O3 -ffast-math
+OPT=-O3 -fast 
 
 # Add profiling to code
 #OPT=-O1 -pg
@@ -31,4 +31,4 @@ sw_parallel: sw_parallel.cpp
 	$(CXX) $(CXXFLAGS) $(ACC) sw_parallel.cpp -o sw_parallel
 
 clean:
-	rm -f sw_sequential sw_parallel *.o
+	rm -f sw_sequential sw_parallel
