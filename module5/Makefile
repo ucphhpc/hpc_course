@@ -1,4 +1,5 @@
 CXX := nvc++
+GCC := g++
 
 #######################################################
 # Optimization flags are chosen as the last definition.
@@ -25,7 +26,7 @@ ACC := -acc=gpu -Minfo=acc
 all: sw_sequential sw_parallel
 
 sw_sequential: sw_sequential.cpp
-	$(CXX) $(CXXFLAGS) sw_sequential.cpp -o sw_sequential
+	$(GCC) $(CXXFLAGS) sw_sequential.cpp -o sw_sequential
 
 sw_parallel: sw_parallel.cpp
 	$(CXX) $(CXXFLAGS) $(ACC) sw_parallel.cpp -o sw_parallel
