@@ -339,5 +339,8 @@ int main(int argc, char **argv) {
                                     "(e.g. --iter 10)");
 
     simulate(iterations, model_filename, output_filename);
+
+    MPI_Finalize();
+
     return 0;
 }
