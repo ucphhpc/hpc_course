@@ -15,9 +15,9 @@ public:
     // The size of the world in the longitude dimension
     uint64_t longitude, global_longitude;
     // The offset for this rank in the latitude dimension
-    uint64_t offset_latitude;
+    long int offset_latitude;
     // The offset for this rank in the longitude dimension
-    uint64_t offset_longitude;
+    long int offset_longitude;
     // The temperature of each coordinate of the world.
     // NB: it is up to the calculation to interpret this vector in two dimension.
     std::vector<double> data;
@@ -220,8 +220,8 @@ void simulate(uint64_t num_of_iterations, const std::string& model_filename, con
     World global_world = read_world_model(model_filename);
 
     // figure out size of domain for this rank
-    const uint64_t offset_longitude = -1; // -1 because first cell is a ghostcell
-    const uint64_t offset_latitude  = -1;
+    const long int offset_longitude = -1; // -1 because first cell is a ghostcell
+    const long int offset_latitude  = -1;
     const uint64_t longitude = global_world.longitude + 2; // one ghost cell on each end
     const uint64_t latitude  = global_world.latitude  + 2;
 
