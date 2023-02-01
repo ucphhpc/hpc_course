@@ -26,30 +26,30 @@ public:
         for (long unsigned int i = 1; i<argument.size() ; i += 2){
             std::string arg = argument[i];
             if(arg=="-h"){ // Write help
-                std::cout << "./par -iter <number of iterations> -dt <time step>"
-                          << " -g <gravitational const> -dx <x grid size> -dy <y grid size>"
-                          << "-fperiod <iterations between each save> -fname <name of output file>\n";
+                std::cout << "./par --iter <number of iterations> --dt <time step>"
+                          << " --g <gravitational const> --dx <x grid size> --dy <y grid size>"
+                          << "--fperiod <iterations between each save> --out <name of output file>\n";
                 exit(0);
             } else if (i == argument.size() - 1)
                 throw std::invalid_argument("The last argument (" + arg +") must have a value");
-            else if(arg=="-iter"){
+            else if(arg=="--iter"){
                 if ((iter = std::stoi(argument[i+1])) < 0) 
                     throw std::invalid_argument("iter most be a positive integer (e.g. -iter 1000)");
-            } else if(arg=="-dt"){
+            } else if(arg=="--dt"){
                 if ((dt = std::stod(argument[i+1])) < 0) 
                     throw std::invalid_argument("dt most be a positive real number (e.g. -dt 0.05)");
-            } else if(arg=="-g"){
+            } else if(arg=="--g"){
                 g = std::stod(argument[i+1]);
-            } else if(arg=="-dx"){
+            } else if(arg=="--dx"){
                 if ((dx = std::stod(argument[i+1])) < 0) 
                     throw std::invalid_argument("dx most be a positive real number (e.g. -dx 1)");
-            } else if(arg=="-dy"){
+            } else if(arg=="--dy"){
                 if ((dy = std::stod(argument[i+1])) < 0) 
                     throw std::invalid_argument("dy most be a positive real number (e.g. -dy 1)");
-            } else if(arg=="-fperiod"){
+            } else if(arg=="--fperiod"){
                 if ((data_period = std::stoi(argument[i+1])) < 0) 
                     throw std::invalid_argument("dy most be a positive integer (e.g. -fperiod 100)");
-            } else if(arg=="-fname"){
+            } else if(arg=="--out"){
                 filename = argument[i+1];
             } else{
                 std::cout << "---> error: the argument type is not recognized \n";
@@ -154,8 +154,7 @@ void simulate(const Sim_Configuration config) {
     auto end = std::chrono::steady_clock::now();
 
     to_file(water_history, config.filename);
-
-    std::cout << "checksum: " << std::accumulate(water_world.e.front().begin(), water_world.e.back().end(), 0) << std::endl;
+    std::cout << "checksum: " << std::accumulate(water_world.e.front().begin(), water_world.e.back().end(), 0.0) << std::endl;
     std::cout << "elapsed time: " << (end - begin).count() / 1000000000.0 << " sec" << std::endl;
 }
 
