@@ -22,4 +22,4 @@ echo Number of threads=$OMP_NUM_THREADS
 # uncomment to write info about binding and environment variables to screen
 #export OMP_DISPLAY_ENV=true
 
-singularity exec ~/modi_images/hpc-notebook_latest.sif ./mp
+singularity exec ~/modi_images/hpc-notebook-latest.sif ./mp

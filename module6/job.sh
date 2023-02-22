@@ -6,5 +6,5 @@
 #SBATCH --exclusive
 
 mpiexec singularity exec \
-   ~/modi_images/hpc-notebook_latest.sif \
+   ~/modi_images/hpc-notebook-latest.sif \
    ./fwc_parallel --iter 1000 --model models/small.hdf5
