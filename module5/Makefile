@@ -18,8 +18,11 @@ INCLUDE := -I../include
 
 CXXFLAGS := $(INCLUDE) $(OPT) -Wall -march=native -g -std=c++14
 
+# use on CPU for testing and development
 ACC := -acc=multicore -Minfo=acc
 
+# use on GPU for benchmarking and real tests of code
+ACC := -acc -gpu=cuda11.6 -Minfo=acc
 
 .PHONY: clean all
 
