@@ -5,6 +5,6 @@
 #SBATCH --ntasks=8
 #SBATCH --exclusive
 
-mpiexec singularity exec \
-   ~/modi_images/hpc-notebook-latest.sif \
+mpiexec apptainer exec \
+   ~/modi_images/ucphhpc/hpc-notebook:latest \
    ./task_farm_HEP
