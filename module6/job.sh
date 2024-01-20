@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=FWC_8cores
-#SBATCH --partition=modi_devel
+#SBATCH --partition=modi_HPPC
 #SBATCH --nodes=1
 #SBATCH --ntasks=8
 #SBATCH --exclusive

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #SBATCH --job-name=Seismogram
-#SBATCH --partition=modi_devel
+#SBATCH --partition=modi_HPPC
 #SBATCH --nodes=1 --ntasks=1 --threads-per-core=1
 #SBATCH --cpus-per-task=1
 #SBATCH --exclusive
