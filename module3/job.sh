@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH --job-name=TF_8cores
+#SBATCH --job-name=TaskFarm
 #SBATCH --partition=modi_HPPC
 #SBATCH --nodes=1
 #SBATCH --ntasks=8
