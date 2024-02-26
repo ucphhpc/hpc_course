@@ -3,7 +3,6 @@
   model for computing the seismic repsonse for a wave
   propagating through a horizontally stratified medium
 */
-
 #include <iostream>
 #include <fstream>
 #include <iomanip>
@@ -12,18 +11,81 @@
 #include <thread>
 #include <complex>
 #include <cmath>
+#include <omp.h>
+
+
+// ======================================================
+// The number of frequencies sets the cost of the problem
+const long NTHREADS=1;            // number of threads
+const long NFREQ=64*1024;         // number of frequencies per core
+const long nfreq=NFREQ*NTHREADS;  // frequencies in spectrum
+
+// ======================================================
+template <class T> class NUMA_Allocator {
+public:
+  typedef T* pointer;
+  typedef const T* const_pointer;
+  typedef T& reference;
+  typedef const T& const_reference;
+  typedef size_t size_type;
+  typedef T value_type;
+
+  NUMA_Allocator() { }
+  NUMA_Allocator(const NUMA_Allocator& _r) { }
+  ~NUMA_Allocator() { }
+
+  // allocate raw memory including page placement
+  pointer allocate(size_t numObjects, const void *localityHint=0) {
+    size_t len = numObjects * sizeof(T);
+    void *m = std::malloc(len);
+    char *p = static_cast<char*>(m);
+    if(!omp_in_parallel()) {
+#pragma omp parallel for schedule(static)
+      for(size_t i=0; i<len; i+=sizeof(T)) {
+        for(size_t j=0; j<sizeof(T); ++j) {
+	  p[i+j]=0;
+	}
+      }
+    }
+    
+    return static_cast<T*>(m);
+  }
+
+  // free raw memory
+  void deallocate(pointer ptrToMemory, size_t numObjects) {
+    std::free(ptrToMemory);
+  }
+
+  // construct object at given address
+  void construct(pointer p, const value_type& x) {
+    new(p) value_type(x);
+  }
+
+  // destroy object at given address
+  void destroy(pointer p) {
+    p->~value_type();
+  }
+
+private:
+  void operator=(const NUMA_Allocator&) {}
+};
 
 // shorthand name for complex number type definition below
 typedef std::complex<double> Complex;
 
-// ======================================================
-// The number of frequencies sets the cost of the problem
-const long nfreq=16*1024; // frequencies in spectrum
-// ======================================================
+// shorthand names for vector types
+
+// Use NUMA-aware first touch allocator
+//typedef std::vector<Complex, NUMA_Allocator<Complex>> ComplexVector;
+//typedef std::vector<double, NUMA_Allocator<double>> DoubleVector;
+
+// Use standard allocator
+typedef std::vector<Complex> ComplexVector;
+typedef std::vector<double> DoubleVector;
 
 // Initialize Basic Constants
 const double dT=0.001;     // sampling distance
-const long nsamp=2*nfreq;   // samples in seismogram
+const long nsamp=2*nfreq;  // samples in seismogram
 
 // Frequency resolution (frequency sampling distance)
 double dF = 1/(nsamp*dT);
@@ -76,24 +138,28 @@ void ifft(std::vector<Complex>& x)
 }
 
 // Main routine: propgate wave through layers and compute seismogram
-std::vector<double> propagator(std::vector<double> wave,
-                               std::vector<double> density,
-                               std::vector<double> velocity) {
+DoubleVector propagator(std::vector<double> wave,
+                        std::vector<double> density,
+                        std::vector<double> velocity) {
     const long nlayers = density.size();
     std::vector<double> imp(nlayers);      // impedance
     std::vector<double> ref(nlayers-1);    // reflection coefficient
-    std::vector<Complex> half_filter(nfreq/2+1,1); // half filter
-    std::vector<Complex> filter(nfreq+1);  // full filter
-    std::vector<double> half_wave(nfreq+1,0); // half wave
-    std::vector<Complex> wave_spectral(nsamp); // FFT(wave)
-    std::vector<Complex> U(nfreq+1,0);     // Upgoing waves
-    std::vector<Complex> Upad(nsamp,0);    // FFT(seismogram)
-    std::vector<double> seismogram(nsamp); // final seismogram
+    ComplexVector half_filter(nfreq/2+1,1); // half filter
+    ComplexVector filter(nfreq+1);  // full filter
+    DoubleVector half_wave(nfreq+1,0); // half wave
+    ComplexVector wave_spectral(nsamp); // FFT(wave)
+    ComplexVector U(nfreq+1,0);     // Upgoing waves
+    ComplexVector Upad(nsamp,0);    // FFT(seismogram)
+    DoubleVector seismogram(nsamp); // final seismogram
+
     long n_wave = wave.size();             // size of wave array
     long lc = std::lround(std::floor(nfreq*0.01)); // low-cut indices
     double mean_wave = 0.;                 // wave zero point
 
     std::chrono::time_point<std::chrono::system_clock> tstart1,tstart2,tend1,tend2;
+
+    auto tstart = std::chrono::high_resolution_clock::now(); // start time (nano-seconds)
+    
 
         // Compute seismic impedance
     for (long i=0; i < nlayers; i++)
@@ -169,12 +235,18 @@ std::vector<double> propagator(std::vector<double> wave,
     for (long i=0; i < nsamp; i++)
         seismogram[i] = std::real(Upad[i]);
 
+    auto tend = std::chrono::high_resolution_clock::now(); // end time (nano-seconds)
+
     std::cout <<  "Wave zero-point        : "  << std::setw(9) << std::setprecision(5) 
               << mean_wave<< "\n";    
     std::cout <<  "Seismogram first coeff : "  << std::setw(9) << std::setprecision(5) 
               << seismogram[0] << ", " << seismogram[1] << ", " << seismogram[2] << ", " << seismogram[3] <<"\n";    
     std::cout <<  "Elapsed time for FFTs  :" << std::setw(9) << std::setprecision(4)
-              << ((tend1 - tstart1).count() + (tend2 - tstart2).count())*1e-9 << "\n";
+              << (tend1 - tstart1 + tend2 - tstart2).count()*1e-9 << "\n";
+    std::cout <<  "Elapsed time without FFTs:" << std::setw(9) << std::setprecision(4)
+              << (tend - tstart - (tend1 - tstart1 + tend2 - tstart2)).count()*1e-9 << "\n";
+    std::cout <<  "Elapsed time:" << std::setw(9) << std::setprecision(4)
+              << (tend - tstart).count()*1e-9 << "\n";
     
     return seismogram;
 }
@@ -188,12 +260,8 @@ int main(int argc, char* argv[]){
     std::vector<double> density = read_txt_file("density_data.txt");   // density as a function of depth
     std::vector<double> velocity = read_txt_file("velocity_data.txt"); // seismic wave velocity as a function of depth
 
-    auto tstart = std::chrono::high_resolution_clock::now(); // start time (nano-seconds)
-    
     // Propagate wave
-    std::vector<double> seismogram = propagator(wave,density,velocity);
-
-    auto tend = std::chrono::high_resolution_clock::now(); // end time (nano-seconds)
+    auto seismogram = propagator(wave,density,velocity);
     
     // write output and make checksum
     double checksum=0;
@@ -202,9 +270,6 @@ int main(int argc, char* argv[]){
         file << seismogram[i] << '\n';
         checksum += abs(seismogram[i]);
     }
-
-    std::cout <<  "Elapsed time:" << std::setw(9) << std::setprecision(4)
-              << (tend - tstart).count()*1e-9 << "\n";
     std::cout <<  "Checksum    :" << std::setw(20) << std::setprecision(15)
               << checksum << "\n";
 }
