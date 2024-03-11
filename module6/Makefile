@@ -1,5 +1,5 @@
-LIB = -lm -L/usr/lib -pthread -L/usr/lib/x86_64-linux-gnu/openmpi/lib -lmpi_cxx -lmpi
-INC = -I/usr/lib/x86_64-linux-gnu/openmpi/include/openmpi -I/usr/lib/x86_64-linux-gnu/openmpi/include -pthread
+LIB = -L/opt/openmpi-4.1.6/lib -Wl,-rpath -Wl,/opt/openmpi-4.1.6/lib -Wl,--enable-new-dtags -lmpi
+INC = -I/opt/openmpi-4.1.6/include
 
 FLAGS = -O3 -DNDEBUG -g -Wall
 

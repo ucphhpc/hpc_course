@@ -280,6 +280,7 @@ void simulate(uint64_t num_of_iterations, const std::string& model_filename, con
     }
     auto end = std::chrono::steady_clock::now();
     
+    stat(world);
     std::cout << "checksum      : " << checksum(world) << std::endl;
     std::cout << "elapsed time  : " << (end - begin).count() / 1000000000.0 << " sec" << std::endl;
 }

@@ -250,14 +250,13 @@ void simulate(uint64_t num_of_iterations, const std::string& model_filename, con
         integrate(world);
 
         // remove ghostzones and construct global data from local data
-        for (uint64_t i = 1; i < latitude-1; ++i)
-        for (uint64_t j = 1; j < longitude-1; ++j) {
-            uint64_t k_global = (i + offset_latitude) * global_world.longitude
-                              + (j + offset_longitude);
-            global_world.data[k_global] = world.data[i * longitude + j];
-        }
-
         if (!output_filename.empty()) {
+            for (uint64_t i = 1; i < latitude-1; ++i)
+            for (uint64_t j = 1; j < longitude-1; ++j) {
+                uint64_t k_global = (i + offset_latitude) * global_world.longitude
+                                + (j + offset_longitude);
+                global_world.data[k_global] = world.data[i * longitude + j];
+            }
             write_hdf5(global_world, output_filename, iteration);
             std::cout << iteration << " -- ";
             stat(world);
@@ -265,6 +264,7 @@ void simulate(uint64_t num_of_iterations, const std::string& model_filename, con
     }
     auto end = std::chrono::steady_clock::now();
     
+    stat(world);
     std::cout << "checksum      : " << checksum(world) << std::endl;
     std::cout << "elapsed time  : " << (end - begin).count() / 1000000000.0 << " sec" << std::endl;
 }
