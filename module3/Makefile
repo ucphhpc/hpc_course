@@ -7,7 +7,7 @@ CXX := mpic++
 # Fastest executable (-ffast-math removes checking for NaNs and other things)
 OPT=-O3
 
-CXXFLAGS := $(OPT) -Wall -Wno-unused-const-variable -std=c++14 -march=native
+CXXFLAGS := $(OPT) -Wall -Wno-unused-const-variable -std=c++17 -march=native
 
 default: task_farm task_farm_HEP task_farm_HEP_seq
 

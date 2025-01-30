@@ -16,7 +16,7 @@ OPT=-O3 -fast
 
 INCLUDE := -I../include
 
-CXXFLAGS := $(INCLUDE) $(OPT) -Wall -march=native -g -std=c++14
+CXXFLAGS := $(INCLUDE) $(OPT) -Wall -march=native -g -std=c++17
 
 # use on CPU for testing and development
 ACC := -acc=multicore -Minfo=acc

@@ -14,7 +14,7 @@ OPT=-O3 -ffast-math
 # Faster compilation time
 #OPT=-O1
 
-CXXFLAGS := $(OPT) -Wall -march=native -g -std=c++14
+CXXFLAGS := $(OPT) -Wall -march=native -g -std=c++17
 
 default: seq mp
 

@@ -1,7 +1,7 @@
 LIB = -L/opt/openmpi-4.1.6/lib -Wl,-rpath -Wl,/opt/openmpi-4.1.6/lib -Wl,--enable-new-dtags -lmpi
 INC = -I/opt/openmpi-4.1.6/include
 
-FLAGS = -O3 -DNDEBUG -g -Wall
+FLAGS = -O3 -DNDEBUG -g -Wall -march=native -std=c++17
 
 .PHONY: clean all
 

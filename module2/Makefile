@@ -13,7 +13,7 @@ OPT=-O1 -pg
 # Faster compilation time
 OPT=-O1
 
-CXXFLAGS := $(OPT) -Wall -march=znver1 -g -std=c++14
+CXXFLAGS := $(OPT) -Wall -march=native -g -std=c++17
 
 default: seq vec
 

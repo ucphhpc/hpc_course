@@ -93,7 +93,7 @@ std::vector<double> propagator(std::vector<double> wave,
     long lc = std::lround(std::floor(nfreq*0.01)); // low-cut indices
     double mean_wave = 0.;                 // wave zero point
 
-    std::chrono::time_point<std::chrono::system_clock> tstart1,tstart2,tend1,tend2;
+    std::chrono::time_point<std::chrono::high_resolution_clock> tstart1,tstart2,tend1,tend2;
 
         // Compute seismic impedance
     for (long i=0; i < nlayers; i++)

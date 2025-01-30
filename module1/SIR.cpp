@@ -8,6 +8,7 @@
 // gamma: recovery rate
 // dt: time step
 std::vector<float> take_step(std::vector<float> state, float beta, float gamma, float dt){
+    std::vector<float> new_state;
     //todo: implement the SIR model
     return new_state;
 }
