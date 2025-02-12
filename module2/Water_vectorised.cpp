@@ -205,7 +205,7 @@ void BuildNeighborList(System& sys){
         distances2[i] = 1e99; // exclude own molecule from neighbour list
 
         // We want at most nClosest neighbors, but no more than number of molecules. 
-        size_t target_num = std::min(nClosest, sys.molecules.size());
+        size_t target_num = std::min(nClosest, sys.molecules.size()-1);
 
         // Lambda function to compare distances with indices as the keys to sort
         auto lambda_compare = [&](size_t &a, size_t &b) { return distances2[a] < distances2[b]; };
