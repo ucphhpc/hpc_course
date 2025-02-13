@@ -257,7 +257,6 @@ void UpdateNonBondedForces(System& sys){
        The total non-bonded forces come from Lennard Jones (LJ) and coulomb interactions
        U = ep[(sigma/r)^12-(sigma/r)^6] + C*q1*q2/r */
     for (size_t i = 0;   i < sys.molecules.size(); i++)
-    //for (size_t j = i+1; j < sys.molecules.size(); j++)
     for (auto& j : sys.molecules[i].neighbours) // iterate over all neighbours of molecule i
     for (auto& atom1 : sys.molecules[i].atoms)
     for (auto& atom2 : sys.molecules[j].atoms){ // iterate over all pairs of atoms, similar as well as dissimilar
@@ -286,7 +285,7 @@ void UpdateKDK(System &sys, Sim_Configuration &sc){
     for (Molecule& molecule : sys.molecules)
     for (auto& atom : molecule.atoms){
         atom.v += sc.dt/atom.mass*atom.f;    // Update the velocities
-        atom.f  = {0,0,0};                      // set the forces zero to prepare for next potential calculation
+        atom.f  = {0,0,0};                   // set the forces zero to prepare for next potential calculation
         atom.p += sc.dt* atom.v;             // update position
     }
 
