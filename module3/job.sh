@@ -3,6 +3,7 @@
 #SBATCH --partition=modi_HPPC
 #SBATCH --nodes=1
 #SBATCH --ntasks=8
+#SBATCH --threads-per-core=1
 #SBATCH --exclusive
 
 mpiexec apptainer exec \
