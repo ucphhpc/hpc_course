@@ -23,3 +23,7 @@ echo Number of threads=$OMP_NUM_THREADS
 #export OMP_DISPLAY_ENV=true
 
 apptainer exec ~/modi_images/ucphhpc/hpc-notebook:latest ./mp
+apptainer exec ~/modi_images/ucphhpc/hpc-notebook:latest ./mp
+apptainer exec ~/modi_images/ucphhpc/hpc-notebook:latest ./mp
+apptainer exec ~/modi_images/ucphhpc/hpc-notebook:latest ./mp
+apptainer exec ~/modi_images/ucphhpc/hpc-notebook:latest ./mp
