@@ -1,5 +1,4 @@
-CXX := clang++-12
-CXX := g++ 
+CXX := g++
 
 #######################################################
 # Optimization flags are chosen as the last definition.
@@ -9,7 +8,10 @@ CXX := g++
 OPT=-O3 -ffast-math
 
 # Add thread checking to code
-#OPT=-O1 -fsanitize=thread -fPIE -pie
+#OPT=-O1 -fsanitize=thread,undefined,bounds -fPIE -pie
+
+# Add memory / address error checking to code
+#OPT=-O1 -fsanitize=leak,address,undefined,bounds -fPIE -pie
 
 # Faster compilation time
 #OPT=-O1
