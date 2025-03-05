@@ -22,7 +22,7 @@ CXXFLAGS := $(INCLUDE) $(OPT) -Wall -march=native -g -std=c++17
 ACC := -acc=multicore -Minfo=acc
 
 # use on GPU for benchmarking and real tests of code
-#ACC := -acc -gpu=cuda11.6 -Minfo=acc
+#ACC := -acc -gpu=cuda12.6 -Minfo=acc
 
 .PHONY: clean all
 
