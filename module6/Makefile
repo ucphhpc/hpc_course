@@ -1,6 +1,8 @@
-LIB = -L/opt/openmpi-4.1.6/lib -Wl,-rpath -Wl,/opt/openmpi-4.1.6/lib -Wl,--enable-new-dtags -lmpi
-INC = -I/opt/openmpi-4.1.6/include
+# instruct h5c++ to use mpic++ as the compiler and linker command
+export HDF5_CXX = mpic++
+export HDF5_CXXLINKER = mpic++
 
+# set compile flags
 FLAGS = -O3 -DNDEBUG -g -Wall -march=native -std=c++17
 
 .PHONY: clean all
