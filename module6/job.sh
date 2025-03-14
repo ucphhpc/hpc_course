@@ -6,6 +6,6 @@
 #SBATCH --threads-per-core=1
 ##SBATCH --exclusive
 
-mpiexec apptainer exec \
+mpiexec -- apptainer exec \
    ~/modi_images/ucphhpc/hpc-notebook:latest \
    ./fwc_parallel --iter 1000 --model models/small.hdf5
