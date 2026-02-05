@@ -13,7 +13,7 @@ OPT=-O1 -pg
 # Faster compilation time
 OPT=-O1
 
-CXXFLAGS := $(OPT) -Wall -march=native -g -std=c++17
+CXXFLAGS := $(OPT) -Wall -march=native -g -std=c++23
 
 default: seq vec
 
@@ -25,3 +25,4 @@ vec: Water_vectorised.cpp
 
 clean:
 	rm -fr seq vec
+
