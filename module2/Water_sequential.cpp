@@ -170,6 +170,11 @@ void BuildNeighborList(System& sys){
         size_t target_num = std::min(nClosest, sys.molecules.size()-1);
 
         // Lambda function to compare distances with indices as the keys to sort
+        //
+        // In Python the following statement would be: lambda_compare = lambda a,b: distance2[a] < distances2[b]
+        // Remember, in Python you cannot decide on pass by value ([=] in C++) or by reference ([&] in C++)
+        // Syntax-wise the "[&]" (or "[]" or "[=]") in C++ corresponds to "lambda" in Python.
+        //
         auto lambda_compare = [&](size_t &a, size_t &b) { return distances2[a] < distances2[b]; };
 
         // partial sort puts the lowest target_num elements at the start of the list and ignore the rest
