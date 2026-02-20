@@ -13,14 +13,24 @@
 #include <cmath>
 #include <omp.h>
 
+// shorthand name for complex number type definition below
+typedef std::complex<double> Complex;
 
 // ======================================================
 // The number of frequencies sets the cost of the problem
-const long NTHREADS=1;            // number of threads
-const long NFREQ=64*1024;         // number of frequencies per core
-const long nfreq=NFREQ*NTHREADS;  // frequencies in spectrum
+#ifndef NFREQ
+#define NFREQ (64*1024)
+#endif
+const long nfreq = NFREQ; // frequencies in spectrum
 
 // ======================================================
+// Initialize Basic Constants
+const double dT=0.001;     // sampling distance
+const long nsamp=2*nfreq;  // samples in seismogram
+double dF = 1/(nsamp*dT);  // Frequency resolution (frequency sampling distance)
+
+// ======================================================
+// Custom memory allocator for NUMA-aware first touch memory placement
 template <class T> class NUMA_Allocator {
 public:
   typedef T* pointer;
@@ -70,29 +80,21 @@ private:
   void operator=(const NUMA_Allocator&) {}
 };
 
-// shorthand name for complex number type definition below
-typedef std::complex<double> Complex;
-
+// ======================================================
 // shorthand names for vector types
-
+#if defined(NUMA_ALLOCATOR) && (NUMA_ALLOCATOR == Y)
 // Use NUMA-aware first touch allocator
-//typedef std::vector<Complex, NUMA_Allocator<Complex>> ComplexVector;
-//typedef std::vector<double, NUMA_Allocator<double>> DoubleVector;
-
+typedef std::vector<Complex, NUMA_Allocator<Complex>> ComplexVector;
+typedef std::vector<double, NUMA_Allocator<double>> DoubleVector;
+#else
 // Use standard allocator
 typedef std::vector<Complex> ComplexVector;
 typedef std::vector<double> DoubleVector;
-
-// Initialize Basic Constants
-const double dT=0.001;     // sampling distance
-const long nsamp=2*nfreq;  // samples in seismogram
-
-// Frequency resolution (frequency sampling distance)
-double dF = 1/(nsamp*dT);
+#endif
 
 // read data file with one number per line
-std::vector<double> read_txt_file(std::string fname) {
-    std::vector<double> data;  // vector of data points
+DoubleVector read_txt_file(std::string fname) {
+    DoubleVector data;  // vector of data points
     std::string line;          // string to read in each line    
     std::ifstream file(fname); // open file
     while (std::getline(file, line))     // loop over lines until end of file
@@ -101,7 +103,8 @@ std::vector<double> read_txt_file(std::string fname) {
 }
 
 // Cooley–Tukey FFT (in-place computation)
-void fft(std::vector<Complex>& x)
+template<typename VectorType>
+void fft(VectorType& x)
 {
 	const long N = x.size();
 	if (N <= 1) return;
@@ -127,7 +130,8 @@ void fft(std::vector<Complex>& x)
 }
 
 // inverse fft (in-place)
-void ifft(std::vector<Complex>& x)
+template<typename VectorType>
+void ifft(VectorType& x)
 {
     double inv_size = 1.0 / x.size();
     for (auto& xx: x) xx = std::conj(xx); // conjugate the input
@@ -138,12 +142,12 @@ void ifft(std::vector<Complex>& x)
 }
 
 // Main routine: propgate wave through layers and compute seismogram
-DoubleVector propagator(std::vector<double> wave,
-                        std::vector<double> density,
-                        std::vector<double> velocity) {
+DoubleVector propagator(DoubleVector wave,
+                        DoubleVector density,
+                        DoubleVector velocity) {
     const long nlayers = density.size();
-    std::vector<double> imp(nlayers);      // impedance
-    std::vector<double> ref(nlayers-1);    // reflection coefficient
+    DoubleVector imp(nlayers);      // impedance
+    DoubleVector ref(nlayers-1);    // reflection coefficient
     ComplexVector half_filter(nfreq/2+1,1); // half filter
     ComplexVector filter(nfreq+1);  // full filter
     DoubleVector half_wave(nfreq+1,0); // half wave
@@ -151,17 +155,14 @@ DoubleVector propagator(std::vector<double> wave,
     ComplexVector U(nfreq+1,0);     // Upgoing waves
     ComplexVector Upad(nsamp,0);    // FFT(seismogram)
     DoubleVector seismogram(nsamp); // final seismogram
-
     long n_wave = wave.size();             // size of wave array
     long lc = std::lround(std::floor(nfreq*0.01)); // low-cut indices
     double mean_wave = 0.;                 // wave zero point
-
-    std::chrono::time_point<std::chrono::high_resolution_clock> tstart1,tstart2,tend1,tend2;
+    std::chrono::time_point<std::chrono::high_resolution_clock> tstart1,tstart2,tend1,tend2; // time points
 
     auto tstart = std::chrono::high_resolution_clock::now(); // start time (nano-seconds)
-    
 
-        // Compute seismic impedance
+    // Compute seismic impedance
     for (long i=0; i < nlayers; i++)
         imp[i] = density[i] * velocity[i];
     
@@ -256,13 +257,13 @@ DoubleVector propagator(std::vector<double> wave,
 //======================================================================================================
 int main(int argc, char* argv[]){    
     // Load the wave profile and the density and velocity structure of the rock from text files
-    std::vector<double> wave = read_txt_file("wave_data.txt");         // input impulse wave in medium
-    std::vector<double> density = read_txt_file("density_data.txt");   // density as a function of depth
-    std::vector<double> velocity = read_txt_file("velocity_data.txt"); // seismic wave velocity as a function of depth
+    DoubleVector wave = read_txt_file("../wave_data.txt");         // input impulse wave in medium
+    DoubleVector density = read_txt_file("../density_data.txt");   // density as a function of depth
+    DoubleVector velocity = read_txt_file("../velocity_data.txt"); // seismic wave velocity as a function of depth
 
     // Propagate wave
-    auto seismogram = propagator(wave,density,velocity);
-    
+    DoubleVector seismogram = propagator(wave,density,velocity);
+
     // write output and make checksum
     double checksum=0;
     std::ofstream file("seismogram.txt"); // open file

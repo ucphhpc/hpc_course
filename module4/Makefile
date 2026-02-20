@@ -1,6 +1,14 @@
 CXX := g++
 
 #######################################################
+# Problem size definition
+NFREQ ?= 16384
+
+#######################################################
+# Set NUMA_ALLOCATOR = Y to use NUMA aware memory allocator 
+NUMA_ALLOCATOR = N
+
+#######################################################
 # Optimization flags are chosen as the last definition.
 # Comment out using "#" at the begining of the line or rearrange according to your needs.
 #
@@ -16,7 +24,7 @@ OPT=-O3 -ffast-math
 # Faster compilation time
 #OPT=-O1
 
-CXXFLAGS := $(OPT) -Wall -march=native -g -std=c++17
+CXXFLAGS := $(OPT) -Wall -march=native -g -std=c++23 -DNFREQ=$(NFREQ) -DNUMA_ALLOCATOR=$(NUMA_ALLOCATOR)
 
 default: seq mp
 
