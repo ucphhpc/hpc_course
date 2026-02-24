@@ -197,9 +197,9 @@ DoubleVector propagator(DoubleVector wave,
 //======================================================================================================
 int main(int argc, char* argv[]){    
     // Load the wave profile and the density and velocity structure of the rock from text files
-    DoubleVector wave = read_txt_file("../wave_data.txt");         // input impulse wave in medium
-    DoubleVector density = read_txt_file("../density_data.txt");   // density as a function of depth
-    DoubleVector velocity = read_txt_file("../velocity_data.txt"); // seismic wave velocity as a function of depth
+    DoubleVector wave = read_txt_file("wave_data.txt");         // input impulse wave in medium
+    DoubleVector density = read_txt_file("density_data.txt");   // density as a function of depth
+    DoubleVector velocity = read_txt_file("velocity_data.txt"); // seismic wave velocity as a function of depth
 
     // Propagate wave
     DoubleVector seismogram = propagator(wave,density,velocity);
