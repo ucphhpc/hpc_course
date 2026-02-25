@@ -8,6 +8,13 @@ NFREQ ?= 16384
 # Set NUMA_ALLOCATOR = Y to use NUMA aware memory allocator 
 NUMA_ALLOCATOR = N
 
+# Convert NUMA_ALLOCATOR=Y to a preprocessor define
+ifeq ($(NUMA_ALLOCATOR),Y)
+NUMA_FLAG = -DNUMA_ALLOCATOR
+else
+NUMA_FLAG =
+endif
+
 #######################################################
 # Optimization flags are chosen as the last definition.
 # Comment out using "#" at the begining of the line or rearrange according to your needs.
@@ -24,7 +31,7 @@ OPT=-O3 -ffast-math
 # Faster compilation time
 #OPT=-O1
 
-CXXFLAGS := $(OPT) -Wall -march=native -g -std=c++23 -DNFREQ=$(NFREQ) -DNUMA_ALLOCATOR=$(NUMA_ALLOCATOR)
+CXXFLAGS := $(OPT) -Wall -march=native -g -std=c++23 -DNFREQ=$(NFREQ) $(NUMA_FLAG)
 
 default: seq mp
 

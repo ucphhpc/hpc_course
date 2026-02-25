@@ -82,7 +82,7 @@ private:
 
 // ======================================================
 // shorthand names for vector types
-#if defined(NUMA_ALLOCATOR) && (NUMA_ALLOCATOR == Y)
+#ifdef NUMA_ALLOCATOR
 // Use NUMA-aware first touch allocator
 typedef std::vector<Complex, NUMA_Allocator<Complex>> ComplexVector;
 typedef std::vector<double, NUMA_Allocator<double>> DoubleVector;
