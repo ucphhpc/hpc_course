@@ -35,7 +35,11 @@ for OMP_NUM_THREADS in 1 2 4 8 16 32 64; do
     apptainer exec "$CONTAINER" make clean
     apptainer exec "$CONTAINER" make NFREQ="$nfreq" mp
 
-    # Run the program
+    # Run the program 5 times to get error bars on the scaling plot
+    apptainer exec "$CONTAINER" ./mp
+    apptainer exec "$CONTAINER" ./mp
+    apptainer exec "$CONTAINER" ./mp
+    apptainer exec "$CONTAINER" ./mp
     apptainer exec "$CONTAINER" ./mp
 done
 
