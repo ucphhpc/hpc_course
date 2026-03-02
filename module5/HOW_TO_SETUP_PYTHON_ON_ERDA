@@ -1,0 +1,8 @@
+# To setup the package on ERDA you should run the following command once in a Jupyter notebook session:
+
+conda install cupy
+
+# You can test that CuPy is properly installed with the following commands.
+# They should as output give some information about the available GPU
+python -c "import cupy as cp; print(cp.__version__); print(cp.cuda.runtime.getDeviceProperties(0)['name'])"
+python -c 'import cupy; cupy.show_config()'

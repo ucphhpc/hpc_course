@@ -1,38 +1,34 @@
-CXX := nvc++
-
+# CUDA C++ Compiler
+NVCC := nvcc
 
 #######################################################
 # Optimization flags are chosen as the last definition.
 # Comment out using "#" at the begining of the line or rearrange according to your needs.
-#
-# Fastest executable (-ffast-math removes checking for NaNs and other things)
-OPT=-O3 -fast 
 
-# Add profiling to code
-#OPT=-O1 -pg
 
-# Faster compilation time
-#OPT=-O1
+# NVCC optimization flags
+#NVCC_OPT=-O1 -G -g -lineinfo -dopt on
+NVCC_OPT=-O3 --use_fast_math # generate optimised code
 
-INCLUDE := -I../include
+#NVCC_OPT += -pg     # Add profiling to code
 
-CXXFLAGS := $(INCLUDE) $(OPT) -Wall -march=native -g -std=c++17
+# NVCC GPU tuning flags (may help, only do this if you know what it does!)
+#NVCC_OPT += --maxrregcount=64 --extra-device-vectorization
 
-# use on CPU for testing and development
-ACC := -acc=multicore -Minfo=acc
-
-# use on GPU for benchmarking and real tests of code
-#ACC := -acc -gpu=cuda12.6 -Minfo=acc
+NVCCFLAGS := $(NVCC_OPT) -std=c++20 -arch=native 
 
 .PHONY: clean all
 
-all: sw_sequential sw_parallel
+all: krakatau krakatau_cuda
 
-sw_sequential: sw_sequential.cpp
-	$(CXX) $(CXXFLAGS) sw_sequential.cpp -o sw_sequential
+# C++ version compiled with nvc++
+krakatau: krakatau.cpp
+	$(NVCC) $(NVCCFLAGS) krakatau.cpp -o krakatau
 
-sw_parallel: sw_parallel.cpp
-	$(CXX) $(CXXFLAGS) $(ACC) sw_parallel.cpp -o sw_parallel
+# CUDA version compiled with nvcc
+krakatau_cuda: krakatau.cu
+	$(NVCC) $(NVCCFLAGS) krakatau.cu -o krakatau_cuda
 
 clean:
-	rm -f sw_sequential sw_parallel
+	rm -f krakatau krakatau_cuda
+

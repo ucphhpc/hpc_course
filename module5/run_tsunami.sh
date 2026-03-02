@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Decide on executable (either CUDA or CuPy) and runtime options.
+export OPTIONS="--scale 1.0 --tend 1800 --fout 180"
+export EXE=./krakatau_cuda
+#export EXE=python krakatau_cupy.py
+
 # make sure stack size is unlimited
 ulimit -s unlimited
 
@@ -14,7 +19,8 @@ export CUDA_VISIBLE_DEVICES=0
 if [ "$#" -gt 2 ] || [ "$#" -eq 0 ]; then
   echo "Usage: $0 <SM> <fill>"
   echo "SM: number of streaming multiprocessors to run on. Has tp be 2, 4, 6, 8, 10, 12, or 14"
-  echo "fill: 0 - just launch one copy, 1 - launch as many copies of sw_parallel as can fit on the GPU (floor(14/SMs))"
+  echo "fill: 0 - just launch one copy, 1 - launch as many copies of krakatau as can fit on the GPU (floor(14/SMs))"
+  echo "Edit script to change the executable and options if needed."
   # shutdown MPS service
   echo quit | nvidia-cuda-mps-control
   exit 1
@@ -30,54 +36,54 @@ case $SM in
   2)
     export CUDA_MPS_ACTIVE_THREAD_PERCENTAGE=15  #  2 SMs
     if [ "$FILL" -eq 0 ]; then
-      ./sw_parallel
+      $EXE $OPTIONS
     else
-      ./sw_parallel &
-      ./sw_parallel &
-      ./sw_parallel &
-      ./sw_parallel &
-      ./sw_parallel &
-      ./sw_parallel &
-      ./sw_parallel &
+      $EXE $OPTIONS &
+      $EXE $OPTIONS &
+      $EXE $OPTIONS &
+      $EXE $OPTIONS &
+      $EXE $OPTIONS &
+      $EXE $OPTIONS &
+      $EXE $OPTIONS &
       wait
     fi;;
 
   4)
     export CUDA_MPS_ACTIVE_THREAD_PERCENTAGE=29  #  4 SMs
     if [ "$FILL" -eq 0 ]; then
-      ./sw_parallel
+      $EXE $OPTIONS
     else
-      ./sw_parallel &
-      ./sw_parallel &
-      ./sw_parallel &
+      $EXE $OPTIONS &
+      $EXE $OPTIONS &
+      $EXE $OPTIONS &
       wait
     fi;;
     
   6)
     export CUDA_MPS_ACTIVE_THREAD_PERCENTAGE=43  #  6 SMs
     if [ "$FILL" -eq 0 ]; then
-      ./sw_parallel
+      $EXE $OPTIONS
     else
-      ./sw_parallel &
-      ./sw_parallel &
+      $EXE $OPTIONS &
+      $EXE $OPTIONS &
       wait
     fi;;
     
   8)
     export CUDA_MPS_ACTIVE_THREAD_PERCENTAGE=58  #  8 SMs
-    ./sw_parallel;;
+    $EXE $OPTIONS;;
     
   10)
     export CUDA_MPS_ACTIVE_THREAD_PERCENTAGE=72  # 10 SMs
-    ./sw_parallel;;
+    $EXE $OPTIONS;;
 
   12)
     export CUDA_MPS_ACTIVE_THREAD_PERCENTAGE=86  # 12 SMs
-    ./sw_parallel;;
+    $EXE $OPTIONS;;
 
   14)
     export CUDA_MPS_ACTIVE_THREAD_PERCENTAGE=100 # 14 SMs
-    ./sw_parallel;;
+    $EXE $OPTIONS;;
 
   *)
     echo "Unknown value for SM = $SM"
