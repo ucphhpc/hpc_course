@@ -1,3 +1,11 @@
+import os
+# CuPy needs CUDA_PATH and CONDA_PREFIX, and they may be unset (e.g. on ERDA)
+if 'CONDA_PREFIX' not in os.environ:
+    os.environ['CONDA_PREFIX'] = '/opt/conda'
+
+if 'CUDA_PATH' not in os.environ:
+    os.environ['CUDA_PATH'] = '/usr/local/cuda'
+
 import cupy as cp
 import numpy as np
 from time import perf_counter
