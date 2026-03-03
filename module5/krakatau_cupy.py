@@ -161,7 +161,7 @@ def step(eta, u, v, g, f_at_u, f_at_v, H_at_u, H_at_v, land_mask, wall_u, wall_v
     # Diffusion coefficient is proportional to wave speed and grid spacing, with a small factor for stability
     diffusion = 0.01 * np.sqrt(g * H_at_u[:, :-1]) * min(dx, dy)
 
-    eta -= dt * (dflux + diffusion * laplacian_eta)
+    eta += dt * (-dflux + diffusion * laplacian_eta)
 
     # Apply land mask and open boundary conditions (radiation): zero gradient in wave height
     eta[land_mask] = 0.0
