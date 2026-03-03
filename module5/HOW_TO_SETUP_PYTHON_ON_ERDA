@@ -1,7 +1,13 @@
-# To setup the package on ERDA you should run the following command once in a Jupyter notebook session:
+# To setup the CuPy package on ERDA you should run the following command once in a Jupyter notebook session:
 
 conda install cupy
 
+# If you would like to run with Numba you also need to install it with
+
+conda install numba
+
+# The conda installation(s) have to be done once every time you get a new virtual machine.
+ 
 # You can test that CuPy is properly installed with the following commands.
 # They should as output give some information about the available GPU
 python -c "import cupy as cp; print(cp.__version__); print(cp.cuda.runtime.getDeviceProperties(0)['name'])"
