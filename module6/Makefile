@@ -20,4 +20,4 @@ fwc_parallel: fwc_parallel.cpp
 	h5c++ $(FLAGS) -o fwc_parallel fwc_parallel.cpp
 
 clean:
-	rm -f fwc_sequential fwc_parallel *.o
+	rm -f fwc_sequential fwc_parallel domain_decomposition *.o
